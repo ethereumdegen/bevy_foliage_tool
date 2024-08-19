@@ -1,0 +1,11 @@
+// terrain_config.ron
+FoliageConfig(
+    
+    
+    texture_image_sections: 4,
+     
+     
+     height_folder_path: "textures/tiles_array_texture.tga", 
+     density_folder_path: "foliage/density_maps", 
+      
+)
