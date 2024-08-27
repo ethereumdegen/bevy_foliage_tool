@@ -1,0 +1,21 @@
+ 
+FoliageConfig(
+   
+
+    boundary_dimensions: (1024, 1024), // IVec2(x, y)
+    chunk_rows: 16, // 16 x 16 .. 64 units each 
+
+   // height_scale: 0.0004,
+
+  
+
+    //density_folder_path: Some("foliage/density"), 
+    //grass_y_map_folder_path: Some("foliage/y_map"), 
+ 
+    foliage_data_files_path: Some("foliage/foliage_scenes"),
+
+    foliage_types_manifest_path: Some("foliage/foliage_manifest")
+    
+)
+
+ 

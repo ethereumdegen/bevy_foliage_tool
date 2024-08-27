@@ -1,5 +1,7 @@
  
-use bevy::{asset::load_internal_asset, prelude::*};
+use crate::foliage_config::FoliageConfig;
+use bevy::{prelude::*};
+use foliage_config::FoliageConfigResource;
  
  
 
@@ -10,24 +12,35 @@ use std::time::Duration;
  
 pub mod foliage;
 pub mod foliage_chunk;
+
+pub mod foliage_scene;
+pub mod foliage_layer;
+pub mod foliage_config;
+pub mod foliage_loading_state;
   
 pub struct BevyFoliageToolPlugin {
-    //task_update_rate: Duration,
-}
-
+    foliage_config_path: String 
+} 
+/*
 impl Default for BevyFoliageToolPlugin {
     fn default() -> Self {
         Self {
+            foliage_config_path: String ,
            // task_update_rate: Duration::from_millis(250),
         }
     }
-}
+}*/
 impl Plugin for BevyFoliageToolPlugin {
     fn build(&self, app: &mut App) {
 
         app
 
+        .insert_resource(FoliageConfigResource(
+            FoliageConfig::load_from_file(&self.foliage_config_path)
+            .expect("Could not load foliage config")
+         ))
 
+        .add_plugins(foliage_loading_state::foliage_loading_state_plugin)
 
         .add_plugins(foliage::foliage_plugin)
 

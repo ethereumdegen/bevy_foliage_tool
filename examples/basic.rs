@@ -1,12 +1,9 @@
+use bevy_foliage_tool::BevyFoliageToolPlugin;
 use bevy::input::mouse::MouseMotion;
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy::{pbr::ShadowFilteringMethod, prelude::*};
-use bevy_regions::{
-    regions::{RegionsData },
-    regions_config::RegionsConfig,
-    BevyRegionsPlugin,
-};
+ 
 use image::{ImageBuffer, Rgba};
 
 //#[derive(Resource)]
@@ -15,7 +12,7 @@ use image::{ImageBuffer, Rgba};
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(BevyRegionsPlugin::default())
+        .add_plugins(BevyFoliageToolPlugin::default())
         .add_systems(Startup, setup)
      //   .add_systems(Startup,create_and_save_texture)
         .add_systems(Update, update_camera_look)
@@ -65,8 +62,7 @@ fn create_and_save_texture(mut commands: Commands, mut images: ResMut<Assets<Ima
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn(SpatialBundle::default())
-        .insert(RegionsConfig::load_from_file("assets/regions/regions_config.ron").unwrap())
-        .insert(RegionsData::new())
+        
 
         .insert(Visibility::Visible)  // only in editor 
         ;

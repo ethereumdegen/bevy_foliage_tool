@@ -17,8 +17,8 @@ keywords = [ "region" , "bevy" ]
 
 [dependencies]
 anyhow = "1.0.75"
-bevy = "0.14.0"
-bevy_mod_sysfail = "7.0.0"
+bevy = "0.14.1"
+
 futures-lite = "1.13.0"
 image = "0.25.1" 
 png = "0.17.11"

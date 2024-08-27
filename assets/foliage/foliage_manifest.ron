@@ -1,0 +1,19 @@
+  (
+    foliage_definitions: [
+
+    
+        (
+            name: "Grass",
+
+            mesh: Some("grass1"),
+
+            material: Some("standard_green")
+            
+           
+        ),
+        
+        
+
+
+	]
+)
