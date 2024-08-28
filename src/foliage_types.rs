@@ -11,21 +11,17 @@ use serde::{Serialize,Deserialize};
 
 
 #[derive(Resource)]
-pub struct FoliageConfigResource( pub FoliageConfig  );
+pub struct FoliageTypesResource( pub FoliageTypesManifest );
 
 
 #[derive(Clone,Debug,Serialize,Deserialize)]
-pub struct FoliageConfig{
+pub struct FoliageTypesManifest{
 
-	pub boundary_dimensions: IVec2,
-	pub chunk_rows: usize,
-	pub foliage_data_files_path:  String ,
-	pub foliage_types_manifest_path: String , 
-
-  
+	pub foliage_definitions: Vec<FoliageDefinition>,
+	 
 }
 
-impl FoliageConfig {
+impl FoliageTypesManifest {
 
 
  pub fn load_from_file(file_path: &str) -> Result<Self, ron::Error> {
@@ -36,4 +32,14 @@ impl FoliageConfig {
         Ok(ron::from_str(&contents)?)
     }
 
+}
+
+#[derive(Clone,Debug,Serialize,Deserialize)]
+pub struct FoliageDefinition{
+
+	pub name: String ,
+
+	pub mesh_name: Option<String>,
+	pub material_name: Option<String>
+	 
 }

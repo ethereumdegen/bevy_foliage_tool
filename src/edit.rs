@@ -1,4 +1,17 @@
-use crate::regionmap::RegionMapU8;
+use crate::foliage_layer::FoliageLayerData;
+use crate::foliage_scene::FoliageScene;
+use crate::foliage_layer::FoliageBaseHeightMapU8;
+use crate::foliage_scene::FoliageSceneData;
+/*use crate::density_map::DensityMap;
+use crate::foliage_chunk::ChunkCoordinates;
+use crate::foliage_chunk::FoliageChunk;
+use crate::density_map::DensityMapU8;
+use crate::foliage_chunk::FoliageChunkDensityData;
+
+*/
+use crate::FoliageConfigResource;
+use crate::foliage_layer::FoliageDensityMapU8;
+use crate::foliage_layer::FoliageLayer;
 use std::fs::File;
 use std::io::BufWriter;
 use std::ops::{Add, Div, Neg};
@@ -18,10 +31,11 @@ use bevy::prelude::*;
  
 use core::fmt::{self, Display, Formatter};
 
-  
-use crate::regions::{RegionDataEvent, RegionPlaneMesh, RegionsData, RegionsDataMapResource};
-use crate::regions_config::RegionsConfig;
-use crate::regions_material::RegionsMaterialExtension;
+use bevy::utils::HashMap;
+
+//use crate::foliage::{FoliageDataEvent,    FoliageData    };
+use crate::foliage_config::FoliageConfig;
+ 
 
  
  
@@ -35,34 +49,28 @@ use rand::Rng;
 use core::cmp::{max, min};
 
 
-pub struct BevyRegionEditsPlugin {
-    
-}
-
-impl Default for BevyRegionEditsPlugin {
-    fn default() -> Self {
-        Self {
-             
-        }
-    }
-}
-impl Plugin for BevyRegionEditsPlugin {
-    fn build(&self, app: &mut App) {
 
 
-      app.add_event::<EditRegionEvent>();
-       app.add_event::<RegionCommandEvent>();
-       app.add_event::<RegionBrushEvent>();
-        app.add_systems(Update, apply_tool_edits); //put this in a sub plugin ?
-        app.add_systems(Update, apply_command_events);
+
+pub(crate) fn bevy_foliage_edits_plugin(app: &mut App) {
+    app
+            .add_event::<EditFoliageEvent>() 
+            .add_event::<FoliageCommandEvent>()
+            .add_event::<FoliageBrushEvent>()
+            .add_systems(Update, (apply_tool_edits,apply_command_events))
+        ;
+
 
 
     }
-}
+
+
+ 
 
 #[derive(Debug, Clone)]
 pub enum EditingTool {
-    SetRegionMap { region_index: u8 },        // height, radius, save to disk 
+    // SetFoliageIndex { foliage_index: u8 },        // height, radius, save to disk 
+    SetFoliageDensity { foliage_index: u8 ,  density: u8 }
 }
 
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
@@ -89,8 +97,9 @@ impl Display for BrushType {
 
 // entity, editToolType, coords, magnitude
 #[derive(Event, Debug, Clone)]
-pub struct EditRegionEvent {
-    pub entity: Entity, //should always be the plane 
+pub struct EditFoliageEvent {
+
+    pub entity: Entity, //not used 
     pub tool: EditingTool,
     pub radius: f32,
     pub brush_hardness: f32, //1.0 is full
@@ -99,63 +108,114 @@ pub struct EditRegionEvent {
 }
 
 #[derive(Event, Debug, Clone)]
-pub enum RegionBrushEvent {
-    EyeDropRegionIndex { region_index: u8 },
+pub enum FoliageBrushEvent {
+    EyeDropFoliageDensity { density: u8 },
   //  EyeDropSplatMap { r: u8, g: u8, b: u8 },
 }
 
 #[derive(Event, Debug, Clone)]
-pub enum RegionCommandEvent {
+pub enum FoliageCommandEvent {
     SaveAll ,  
 }
 
 pub fn apply_command_events(
-    asset_server: Res<AssetServer>,
+   // asset_server: Res<AssetServer>,
 
-   // mut chunk_query: Query<(&Chunk, &mut ChunkData, &Parent, &Children)>, //chunks parent should have terrain data
+   
 
-    mut images: ResMut<Assets<Image>>,
-    mut region_materials: ResMut<Assets<RegionsMaterialExtension>>,
+    foliage_scene_query: Query< &FoliageScene  >, 
+ 
+    foliage_layer_query: Query<(&FoliageLayer, &FoliageDensityMapU8, &FoliageBaseHeightMapU8)>, //chunks parent should have terrain data
 
-    mut region_maps_res: ResMut<RegionsDataMapResource>, //like height map resource 
-
-    region_data_query: Query<(&RegionsData, &RegionsConfig)>,
-
+    foliage_config_resource: Res<FoliageConfigResource>,
     
-    mut ev_reader: EventReader<RegionCommandEvent>,
+    mut ev_reader: EventReader<FoliageCommandEvent>,
 ) {
     for ev in ev_reader.read() {
        
            
 
-            let Some((region_data, region_config)) = region_data_query
+            /*let Some((foliage_data, foliage_config)) = foliage_data_query
                     .get_single().ok() else {continue};
-
+                */
 
 
             match ev {
-                RegionCommandEvent::SaveAll => {
+                FoliageCommandEvent::SaveAll => {
                     //let file_name = format!("{}.png", chunk.chunk_id);
-                     let asset_folder_path = PathBuf::from("assets");
-                    let region_texture_path = &region_config.region_texture_path;
-                     
-                    
-                //    info!("path {:?}",region_data_path);
-                      if let Some(region_data) =
-                          &  region_maps_res.regions_data_map
-                        {
+                  // let asset_folder_path = PathBuf::from("assets/");
 
-                        save_region_index_map_to_disk(
-                                &region_data,
-                                asset_folder_path.join( region_texture_path ),
-                        );
+
+                    let foliage_config = &foliage_config_resource.0;
+                  
+
+                    let foliage_data_files_path = &foliage_config.foliage_data_files_path  ;
+
+
+                    for  foliage_scene  in foliage_scene_query.iter(){
+
+                        let foliage_scene_name = foliage_scene.foliage_scene_name.clone() ;
+                        let mut layers_data_map = HashMap::new(); 
+
+                        let foliage_layer_entities_map = &foliage_scene.foliage_layer_entities_map;
+
+                        for ( layer_index, layer_entity) in foliage_layer_entities_map.iter()  {
+
+                            if let Some( (foliage_layer, density_data,height_data) )
+                                = foliage_layer_query.get( * layer_entity ).ok() {
+
+                                    layers_data_map.insert(
+                                        //foliage_layer.foliage_index,
+                                        *layer_index,
+
+                                        FoliageLayerData {
+
+                                            foliage_index: *layer_index,
+                                            density_map : density_data.clone(),
+                                            base_height_map: height_data.clone(), 
+
+                                        }
+
+                                    );
+  
+                                   /* layers_data_array.push(
+                                        FoliageLayerData {
+
+                                            foliage_index: foliage_layer.foliage_index,
+                                            density_map : density_data.clone(),
+                                            base_height_map: height_data.clone(), 
+
+                                        }
+                                    );*/
+
+                            }
+
+
+                        }
+
+
+
+                        let foliage_scene_data = FoliageSceneData {
+                            foliage_scene_name: foliage_scene_name,
+                            foliage_layers: layers_data_map
+
+                        };
+
+
+
+                        //for now
+                        let save_result = foliage_scene_data.save_to_disk_debug( foliage_data_files_path );
+
+                        if let Err(error) = save_result {
+
+                            warn!(error);
+                        }
+
+
                     }
-                     
+                    
  
-
-                     
-
-                    println!("saved region data ");
+                   
                 
             }
           }
@@ -163,219 +223,134 @@ pub fn apply_command_events(
      
 
     //  Ok(())
+
 }
 
+
+
+
 pub fn apply_tool_edits(
-  
-    region_data_query: Query<(&mut RegionsData, &RegionsConfig)> , 
 
-   
-
-    mut region_map_data_res: ResMut<RegionsDataMapResource>,
+    foliage_scene_query: Query< &FoliageScene  >, 
  
-     region_plane_mesh_query: Query<(Entity,   &GlobalTransform), With<RegionPlaneMesh>>,
+    mut foliage_layer_query: Query<(&FoliageLayer, &mut FoliageDensityMapU8, &FoliageBaseHeightMapU8)>, //chunks parent should have terrain data
+    
+      foliage_config_resource: Res<FoliageConfigResource>,
+    
 
-
-
-    mut ev_reader: EventReader<EditRegionEvent>,
-
-    mut evt_writer: EventWriter<RegionBrushEvent>,
-
-    mut region_data_event_writer: EventWriter<RegionDataEvent>
+    mut ev_reader: EventReader<EditFoliageEvent>,
+    mut evt_writer: EventWriter<FoliageBrushEvent>,
 ) {
     for ev in ev_reader.read() {
-        eprintln!("-- {:?} -- region edit event!", &ev.tool);
+        let tool_coords = ev.coordinates;
+        let radius = ev.radius;
+        let brush_hardness = ev.brush_hardness;
+        let brush_type = &ev.brush_type;
 
-       let Some((region_data, region_config)) = region_data_query
-                    .get_single().ok() else {
-                          warn!("no regions entity found" );
-                        continue
-                    };
-
+        info!("apply foliage tool edit 1 ");
 
 
-        let intersected_entity = &ev.entity;
+        //for (chunk_entity, chunk_transform_vec2) in chunk_entities_within_range {
+         //   if let Ok((_, _, mut chunk_density_data, _)) = foliage_chunk_query.get_mut(chunk_entity) {
+                let tool_coords_local = tool_coords ;
 
-       
-       let Some((region_plane_entity,  _ )) = region_plane_mesh_query.get(intersected_entity.clone()).ok() else {
-        warn!("region plane not intersected");
-        continue
-    } ;
-            //let mut chunk_entities_within_range: Vec<Entity> = Vec::new();
-
-            let   plane_dimensions = region_config.boundary_dimensions.clone(); //compute me from  config
-          
-
-      
-
-             let tool_coords: &Vec2 = &ev.coordinates;
-             info!("tool coords {:?}", tool_coords);
-
-            
-
-            
-            let average_height = 0; //for now  // total_height as f32 / heights_len as f32;
-            // ------
-            let radius = &ev.radius;
-            let brush_type = &ev.brush_type;
-
-              info!("Region Set Exact 1 ");
-
-               let Some(region_map_data) =
-                                &mut region_map_data_res.regions_data_map
-                            else {
-                                warn!("regions data map is null ");
-                                continue
-                            }; 
-
-              let mut region_index_map_changed = false;
-
-            let brush_hardness = &ev.brush_hardness;
-            
-               
-                    match &ev.tool {
-                        EditingTool::SetRegionMap { region_index } => {
-                             
+                 let foliage_config = &foliage_config_resource.0;
 
 
-                           
-
-                                let tool_coords: &Vec2 = &ev.coordinates;
-
-                                let tool_coords_local: &Vec2 = &ev.coordinates;
-
-                          
-                                //need to make an array of all of the data indices of the terrain that will be set .. hm ?
-                                let img_data_length = region_map_data.len();
-
-                             
-
-                                let radius_clone = radius.clone();
-
-                                info!("Region Set Exact 2 ");
-
-                                match brush_type {
-                                    BrushType::SetExact => {
-                                        for x in 0..img_data_length {
-                                            for y in 0..img_data_length {
-                                                let local_coords = Vec2::new(x as f32, y as f32);
-
-                                                 // info!("local_coords {:?} ", local_coords);
-
-                                                let hardness_multiplier = get_hardness_multiplier(
-                                                    tool_coords_local.distance(local_coords),
-                                                    radius_clone,
-                                                    *brush_hardness,
-                                                );
-                                                let original_region_index = region_map_data[y][x];
+                  let foliage_dimensions = &foliage_config.boundary_dimensions;
 
 
-                                                 //  info!("tool_coords_local {:?} ", tool_coords_local);
+
+                //let img_data_length = chunk_density_data.density_map_data.len();
+
+                match &ev.tool {
+                    EditingTool::SetFoliageDensity { foliage_index , density: new_density } => {
 
 
-                                                if tool_coords_local.distance(local_coords)
-                                                    < radius_clone
-                                                {
-                                                    let new_region_index = region_index.clone();
 
+                    for  foliage_scene  in foliage_scene_query.iter(){
 
-                                                    region_map_data[y][x] =
-                                                        apply_hardness_multiplier(
-                                                            original_region_index as f32,
-                                                            new_region_index as f32,
+                      //  let foliage_scene_name = foliage_scene.foliage_scene_name.clone() ;
+                       // let mut layers_data_map = HashMap::new(); 
+
+                        let foliage_layer_entities_map = &foliage_scene.foliage_layer_entities_map;
+
+                        let Some(selected_layer_entity) = foliage_layer_entities_map.get( &(*foliage_index as usize ) ) else {
+                            warn!("no matching foliage layer entity");
+                            continue;
+                        };
+
+                       // for ( layer_index, layer_entity) in foliage_layer_entities_map.iter()  {
+
+                            if let Some( (_foliage_layer, mut density_data_comp, _height_data_comp) )
+                                = foliage_layer_query.get_mut( * selected_layer_entity ).ok() {
+
+                            
+                                 info!("apply foliage tool edit 2 ");
+
+                                let density_data = &mut density_data_comp.0; 
+
+                                   match brush_type {
+                                        BrushType::SetExact => {
+                                            for x in 0..foliage_dimensions.x as usize {
+                                                for y in 0..foliage_dimensions.y as usize  {
+                                                    let local_coords = Vec2::new(x as f32, y as f32);
+                                                    let distance = tool_coords_local.distance(local_coords);
+
+                                                    if distance < radius {
+                                                        let hardness_multiplier = get_hardness_multiplier(distance, radius, brush_hardness);
+                                                        let original_density = density_data[y][x];
+                                                        density_data[y][x] = apply_hardness_multiplier(
+                                                            original_density as f32,
+                                                            *new_density as f32,
                                                             hardness_multiplier,
-                                                        )
-                                                            as u8;
-                                                    region_index_map_changed = true;
-
-                                                   // info!("region_index_map_changed {:?} ",new_region_index);
-
-
+                                                        ) as u8;
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-
-                                    BrushType::Smooth => {
-                                        for x in 0..img_data_length {
-                                            for y in 0..img_data_length {
-                                                let local_coords = Vec2::new(x as f32, y as f32);
-                                                if tool_coords_local.distance(local_coords)
-                                                    < *radius
-                                                {
-                                                    let hardness_multiplier =
-                                                        get_hardness_multiplier(
-                                                            tool_coords_local
-                                                                .distance(local_coords),
-                                                            radius_clone,
-                                                            *brush_hardness,
-                                                        );
-
-                                                    let original_region_index = region_map_data[y][x];
-                                                    // Gather heights of the current point and its neighbors within the brush radius
-
-                                                    let new_region_index = ((average_height as f32
-                                                        + original_region_index as f32)
-                                                        / 2.0)
-                                                        as u8;
-                                                    region_map_data[y][x] =
-                                                        apply_hardness_multiplier(
-                                                            original_region_index as f32,
-                                                            new_region_index as f32,
-                                                            hardness_multiplier,
-                                                        )
-                                                            as u8;
-                                                    region_index_map_changed = true;
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                     
-
-                                    BrushType::EyeDropper => {
-                                        // Check if the clicked coordinates are within the current chunk
-                                         
-                                            
+                                        BrushType::EyeDropper => {
                                             let x = tool_coords_local.x as usize;
                                             let y = tool_coords_local.y as usize;
 
-                                            if x < img_data_length && y < img_data_length {
-                                              
-
-                                                let local_index_data = region_map_data[y][x];
-                                                evt_writer.send(
-                                                    RegionBrushEvent::EyeDropRegionIndex   {
-                                                        region_index: local_index_data,
-                                                    },
-                                                );
+                                            if x < foliage_dimensions.x as usize && y < foliage_dimensions.y as usize {
+                                                let local_data = density_data[y][x];
+                                                evt_writer.send(FoliageBrushEvent::EyeDropFoliageDensity {  density: local_data });
                                             }
-                                        
+                                        }
+                                        _ => warn!("Brush type not implemented!"),
                                     }
-                                }
 
-                              
-                            }
+
+
+
+
+
+                                }
+                          //  }
+                        } // for  foliage_scene 
                        
-                     
 
-
-
-                    } //match
-                
-              if region_index_map_changed {
-
-                             
-
-                                   region_data_event_writer.send(
-
-                                         RegionDataEvent::RegionMapNeedsReloadFromResourceData
-                                    );
-
-                                }
+                        
+                       /* apply_density_edit(
+                            &mut chunk_density_data.density_map_data,
+                            tool_coords_local,
+                            radius,
+                            brush_hardness,
+                             density,
+                            brush_type,
+                            &mut evt_writer,
+                        );*/
+                    }
+                }
+          //  }
+       // }
     }
 }
+ 
 
+
+ 
 fn get_hardness_multiplier(pixel_distance: f32, brush_radius: f32, brush_hardness: f32) -> f32 {
     // Calculate the distance as a percentage of the radius
     let distance_percent = pixel_distance / brush_radius;
@@ -402,34 +377,4 @@ fn apply_hardness_multiplier(
 }
 
 
-
-//move this to region_map.rs ? 
-
-// outputs as R16 grayscale
-pub fn save_region_index_map_to_disk<P>(
-    region_map_data: &RegionMapU8, // Adjusted for direct Vec<Vec<u16>> input
-    save_file_path: P,
-) where
-    P: AsRef<Path>,
-{
-    let region_map_data = region_map_data.clone();
-
-    let height = region_map_data.len();
-    let width = region_map_data.first().map_or(0, |row| row.len());
-
-    let file = File::create(save_file_path).expect("Failed to create file");
-    let ref mut w = BufWriter::new(file);
-
-    let mut encoder = png::Encoder::new(w, width as u32, height as u32);
-    encoder.set_color(png::ColorType::Grayscale);
-    encoder.set_depth(png::BitDepth::Eight); // Change to 8-bit depth
-    let mut writer = encoder.write_header().expect("Failed to write PNG header");
-
-    // Flatten the Vec<Vec<u8>> to a Vec<u8> for the PNG encoder
-    let buffer: Vec<u8> = region_map_data.iter().flatten().cloned().collect();
-
-    // Write the image data
-    writer
-        .write_image_data(&buffer)
-        .expect("Failed to write PNG data");
-}
+ 
