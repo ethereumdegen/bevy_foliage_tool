@@ -20,12 +20,17 @@ pub(crate) fn foliage_scene_plugin(app: &mut App ) {
     app
     		
 
-    	.add_systems(Update, unpack_foliage_scene_data_components)
+    	.add_systems(Update, unpack_foliage_scene_data_components )
     	;
 
 
 
   }
+
+
+
+ 
+ 
 
 
 
@@ -267,7 +272,11 @@ fn unpack_foliage_scene_data_components(
       		
       		for (foliage_def_index, _foliage_definition) in foliage_definitions.iter().enumerate() {
 
-      			layers_data_array.insert( foliage_def_index, FoliageLayerData::new( foliage_def_index, boundary_dimensions ) );  
+      			layers_data_array.insert( foliage_def_index, 
+      				FoliageLayerData::new( 
+      					foliage_def_index, 
+      					boundary_dimensions
+      					 ) ) ;  
 
       		}
       	}

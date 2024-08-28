@@ -1,7 +1,8 @@
+use crate::foliage_config::FoliageConfigResource;
 use crate::FoliageTypesResource;
 use crate::foliage_layer::FoliageLayer;
 use crate::foliage_layer::FoliageDensityMapU8;
-use crate::foliage_layer::FoliageBaseHeightMapU8;
+use crate::foliage_layer::FoliageBaseHeightMapU16;
 use crate::foliage_proto;
 use crate::foliage_proto::FoliageProto;
 use bevy::prelude::*;
@@ -41,10 +42,11 @@ fn handle_chunk_rebuilds(
 
     chunks_query: Query< (Entity,&FoliageChunk,&Parent), With<FoliageChunkNeedsRebuild> >,
 
-    foliage_layer_query: Query<(&FoliageLayer, &  FoliageDensityMapU8, &FoliageBaseHeightMapU8)>, //chunks parent should have terrain data
-    
+    foliage_layer_query: Query<(&FoliageLayer, &  FoliageDensityMapU8, &FoliageBaseHeightMapU16)>, //chunks parent should have terrain data
+     
+    foliage_types_resource: Res<FoliageTypesResource>,
 
-    foliage_types_resource: Res<FoliageTypesResource>
+    foliage_config_resource: Res<FoliageConfigResource> ,
 
 
 ){
@@ -96,6 +98,9 @@ fn handle_chunk_rebuilds(
         };
 
 
+        let foliage_config = &foliage_config_resource.0;
+        let height_scale = foliage_config.height_scale; 
+
 
         for x in 0 .. chunk_dimensions.x { 
 
@@ -116,7 +121,7 @@ fn handle_chunk_rebuilds(
 
                 let foliage_proto_translation = Vec3::new( 
                     x  as f32, 
-                    chunk_base_height_at_point as f32, 
+                    chunk_base_height_at_point  as f32 * height_scale , 
                     y  as f32 
                 );
 

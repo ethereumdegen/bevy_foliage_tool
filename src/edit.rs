@@ -1,6 +1,6 @@
 use crate::foliage_layer::FoliageLayerData;
 use crate::foliage_scene::FoliageScene;
-use crate::foliage_layer::FoliageBaseHeightMapU8;
+use crate::foliage_layer::FoliageBaseHeightMapU16;
 use crate::foliage_scene::FoliageSceneData;
 /*use crate::density_map::DensityMap;
 use crate::foliage_chunk::ChunkCoordinates;
@@ -125,7 +125,7 @@ pub fn apply_command_events(
 
     foliage_scene_query: Query< &FoliageScene  >, 
  
-    foliage_layer_query: Query<(&FoliageLayer, &FoliageDensityMapU8, &FoliageBaseHeightMapU8)>, //chunks parent should have terrain data
+    foliage_layer_query: Query<(&FoliageLayer, &FoliageDensityMapU8, Option<&FoliageBaseHeightMapU16> )>, //chunks parent should have terrain data
 
     foliage_config_resource: Res<FoliageConfigResource>,
     
@@ -161,7 +161,7 @@ pub fn apply_command_events(
 
                         for ( layer_index, layer_entity) in foliage_layer_entities_map.iter()  {
 
-                            if let Some( (foliage_layer, density_data,height_data) )
+                            if let Some( (foliage_layer, density_data, height_data) )
                                 = foliage_layer_query.get( * layer_entity ).ok() {
 
                                     layers_data_map.insert(
@@ -172,7 +172,7 @@ pub fn apply_command_events(
 
                                             foliage_index: *layer_index,
                                             density_map : density_data.clone(),
-                                            base_height_map: height_data.clone(), 
+                                            base_height_map: height_data.cloned(), 
 
                                         }
 
@@ -233,7 +233,7 @@ pub fn apply_tool_edits(
 
     foliage_scene_query: Query< &FoliageScene  >, 
  
-    mut foliage_layer_query: Query<(&FoliageLayer, &mut FoliageDensityMapU8, &FoliageBaseHeightMapU8)>, //chunks parent should have terrain data
+    mut foliage_layer_query: Query<(&FoliageLayer, &mut FoliageDensityMapU8, &FoliageBaseHeightMapU16)>, //chunks parent should have terrain data
     
     foliage_config_resource: Res<FoliageConfigResource>,
     

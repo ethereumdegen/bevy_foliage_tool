@@ -2,8 +2,7 @@
 ### TODO 
 
 
-
-- load in the height data 
+- fix redraw / rebuild 
 
 - hide visibility for chunks that are far from the   Viewer comp (camera)
 

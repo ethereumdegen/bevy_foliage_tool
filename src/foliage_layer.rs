@@ -13,7 +13,10 @@ pub(crate) fn foliage_layer_plugin(app: &mut App ) {
     app
     		
 
-    	.add_systems(Update, unpack_foliage_layer_data_components)
+    	.add_systems(Update, (
+    		unpack_foliage_layer_data_components,
+    		handle_foliage_layer_rebuild 
+    		))
     	;
 
 
@@ -38,16 +41,21 @@ pub struct FoliageLayer {
 }
 
  
+
+
+#[derive(Component)]
+pub struct FoliageLayerNeedsRebuild;
+
 /// A component typically on the FoliageLayer entity
 #[derive(Component,Debug,Clone,Serialize,Deserialize )]
-pub struct FoliageBaseHeightMapU8(pub Vec<Vec<u8>>);
+pub struct FoliageBaseHeightMapU16(pub Vec<Vec<u16>>);
 
-impl FoliageBaseHeightMapU8 {
+impl FoliageBaseHeightMapU16 {
 
 	pub fn new(dimensions: IVec2) -> Self {
 
 		let (width, height) = (dimensions.x as usize, dimensions.y as usize);
-        let map = vec![vec![0u8; width]; height];
+        let map = vec![vec![0u16; width]; height];
         Self(map)
 
 	}
@@ -72,6 +80,16 @@ impl FoliageDensityMapU8 {
 }
 
 
+/*
+
+	Density data is 1024 x 1024 
+
+	base height data SHOULD be 1024x1024 
+
+
+	terrains height data is stored in chunks , where each is 256 x 256 
+	
+*/
 
 // this is just used for saving 
 #[derive( Component, Clone,Debug,Serialize,Deserialize)]
@@ -81,7 +99,7 @@ pub struct FoliageLayerData {
 
 	 
 	pub density_map: FoliageDensityMapU8,
-	pub base_height_map: FoliageBaseHeightMapU8, 
+	pub base_height_map: Option< FoliageBaseHeightMapU16 > , 
 
 	 
 }
@@ -95,7 +113,7 @@ impl FoliageLayerData{
 			foliage_index,
 		//	dimensions: boundary_dimensions.clone(), 
 			density_map: FoliageDensityMapU8::new( boundary_dimensions )  ,
-			base_height_map : FoliageBaseHeightMapU8::new( boundary_dimensions ) 
+			base_height_map : None //FoliageBaseHeightMapU8::new( boundary_dimensions ) 
 		}
 
 	}
@@ -164,10 +182,22 @@ fn unpack_foliage_layer_data_components(
 
       			 })
       		.insert(density_map_data.clone())
-      		.insert(base_height_map_data.clone())
+      		//.insert(base_height_map_data.clone())
       		.insert(Name::new("foliage_layer"))
+      		.insert( FoliageLayerNeedsRebuild )
       		.despawn_descendants()
       		 ; 
+
+
+
+      		 if let Some(base_height_map_data) = base_height_map_data {
+
+      		 	foliage_layer_cmd
+      		 	.insert( 
+      		 	 base_height_map_data.clone() 
+      		 	 );
+
+      		 }
 
       		 //spawn foliage chunks ? 
 
@@ -204,7 +234,7 @@ fn unpack_foliage_layer_data_components(
       		 		.insert(FoliageChunk {
       		 			chunk_offset 
       		 		})
-      		 		.insert(FoliageChunkNeedsRebuild)
+      		 		//.insert(FoliageChunkNeedsRebuild)
       		 		.insert(Name::new("foliage_chunk"))
       		 		.set_parent(  foliage_layer_entity  )
       		 		.id(); 
@@ -221,11 +251,48 @@ fn unpack_foliage_layer_data_components(
 
 	}
 
+ 
+
+
+}
+
+
+
+fn handle_foliage_layer_rebuild( 
+	mut commands: Commands, 
+	foliage_layer_query: Query<(Entity, &FoliageLayer, &FoliageDensityMapU8, &FoliageBaseHeightMapU16, &Children), With<FoliageLayerNeedsRebuild>>,
+
+	foliage_chunk_query: Query<&FoliageChunk> ,
+
+){
+
+
+	for (foliage_layer_entity,_foliage_layer, _density_comp,_base_height_comp, children) in foliage_layer_query.iter(){
+
+
+		if let Some(mut cmd) =commands.get_entity(foliage_layer_entity){
+
+			cmd.remove::<FoliageLayerNeedsRebuild>();
+		}
 
 
 
 
+		for child in children {
+			if !foliage_chunk_query.get(*child).is_ok() {continue};
+				if let Some(mut cmd) =commands.get_entity(*child){
 
+				   	cmd.insert ( FoliageChunkNeedsRebuild );
+				}
+
+
+
+		}
+
+
+
+
+	}
 
 
 
