@@ -26,7 +26,7 @@ pub mod foliage_assets;
 pub mod foliage_proto;
   
 pub mod noise;
-
+pub mod foliage_viewer;
  
 
 
@@ -84,7 +84,7 @@ impl Plugin for BevyFoliageProtoPlugin {
         app 
 
       //  .insert_resource( self.foliage_assets_resource.clone() )
-       .add_plugins(foliage_assets::foliage_assets_plugin)
+        .add_plugins(foliage_assets::foliage_assets_plugin)
 
         .add_plugins(foliage_proto::foliage_proto_plugin)
 

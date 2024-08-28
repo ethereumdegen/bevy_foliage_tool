@@ -1,3 +1,4 @@
+use crate::foliage_viewer::FoliageViewer;
 use crate::foliage_layer::FoliageLayerSystemSet;
 use crate::foliage_config::FoliageConfigResource;
 use crate::noise::NoiseResource;
@@ -15,7 +16,11 @@ pub(crate) fn foliage_chunks_plugin(app: &mut App) {
     app
     	
         .add_systems(Update, 
-            handle_chunk_rebuilds
+            (
+                handle_chunk_rebuilds,
+                update_chunk_visibility,
+
+                ).chain()
             .in_set(FoliageChunkSystemSet)
             .before(FoliageLayerSystemSet)
             )
@@ -40,6 +45,62 @@ pub struct FoliageChunk {
 
 #[derive(Component)]
 pub struct FoliageChunkNeedsRebuild;
+
+
+
+fn update_chunk_visibility(
+
+    foliage_viewer_query: Query<Entity, With<FoliageViewer>>,
+
+    global_xform_query: Query<&GlobalTransform>,
+
+    mut foliage_chunk_query: Query<(Entity,&FoliageChunk,&mut Visibility)>,
+
+    foliage_config_resource: Res<FoliageConfigResource> ,
+ 
+
+
+
+    ){
+
+    let Some(foliage_viewer_entity) = foliage_viewer_query.get_single().ok() else {return};
+
+    let Some(viewer_xform) = global_xform_query.get(foliage_viewer_entity).ok() else {return};
+
+    let viewer_translation = viewer_xform.translation();
+
+    let foliage_config = &foliage_config_resource.0;
+
+    let Some(max_render_distance) = foliage_config.render_distance else {return} ;
+
+
+
+    for (foliage_chunk_entity,_foliage_chunk, mut visibility) in foliage_chunk_query.iter_mut(){
+
+
+         let Some(chunk_xform) = global_xform_query.get(foliage_chunk_entity).ok() else {continue};
+         let chunk_translation = chunk_xform.translation() ;
+
+         let chunk_dimensions = Vec3::new( 64.0, 0.0, 64.0 ) ; 
+
+         let chunk_center_translation = chunk_translation + chunk_dimensions/2.0;
+
+         let distance = chunk_center_translation.distance( viewer_translation );
+
+         if distance <= max_render_distance {
+            *visibility = Visibility::Inherited;
+         }else {
+            *visibility = Visibility::Hidden; 
+         }
+
+
+
+    }
+
+
+
+
+}
 
 
 
@@ -144,7 +205,7 @@ fn handle_chunk_rebuilds(
                 let noise_sample_at_point = noise_texture.data[noise_tex_data_index as usize];
 
                 let noise_sample_scaled = noise_sample_at_point as f32 / max_noise_value; 
-              //  info!("noise_sample_at_point {} {}", noise_sample_at_point , noise_sample_scaled);
+                //  info!("noise_sample_at_point {} {}", noise_sample_at_point , noise_sample_scaled);
 
 
                 if chunk_density_scaled < noise_sample_scaled {
@@ -152,7 +213,7 @@ fn handle_chunk_rebuilds(
                 }
 
 
-//                info!("chunk_density_at_point {:?}", chunk_density_at_point);
+                // info!("chunk_density_at_point {:?}", chunk_density_at_point);
 
                 //combine with noise here ,  then spawn foliage    proto  
 

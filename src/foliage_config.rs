@@ -22,7 +22,7 @@ pub struct FoliageConfig{
 	pub foliage_data_files_path:  String ,
 	pub foliage_types_manifest_path: String , 
 
-    pub render_distance: f32,
+    pub render_distance: Option<f32>,
     pub height_scale: f32,  
  
   

@@ -7,7 +7,7 @@ FoliageConfig(
 
   
     
-    render_distance: 100.0,
+    render_distance: Some(100.0),
    
     height_scale: 0.001,
 
