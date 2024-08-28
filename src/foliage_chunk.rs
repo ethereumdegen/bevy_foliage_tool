@@ -1,3 +1,4 @@
+use crate::foliage_layer::FoliageLayerSystemSet;
 use crate::foliage_config::FoliageConfigResource;
 use crate::FoliageTypesResource;
 use crate::foliage_layer::FoliageLayer;
@@ -12,7 +13,11 @@ use bevy::prelude::*;
 pub(crate) fn foliage_chunks_plugin(app: &mut App) {
     app
     	
-        .add_systems(Update, handle_chunk_rebuilds)
+        .add_systems(Update, 
+            handle_chunk_rebuilds
+            .in_set(FoliageChunkSystemSet)
+            .before(FoliageLayerSystemSet)
+            )
     	;
 
 
@@ -20,6 +25,8 @@ pub(crate) fn foliage_chunks_plugin(app: &mut App) {
     }
 
 
+#[derive(SystemSet,Clone,Debug,Hash,PartialEq,Eq)]
+pub struct FoliageChunkSystemSet;
 
 #[derive(Component)]
 pub struct FoliageChunk {
@@ -114,7 +121,7 @@ fn handle_chunk_rebuilds(
 
                 if chunk_density_at_point <= 0 {continue};
 
-                info!("chunk_density_at_point {:?}", chunk_density_at_point);
+//                info!("chunk_density_at_point {:?}", chunk_density_at_point);
 
                 //combine with noise here ,  then spawn foliage    proto  
 

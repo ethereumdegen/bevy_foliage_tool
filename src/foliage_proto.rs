@@ -1,5 +1,6 @@
 
 
+use crate::foliage_chunk::FoliageChunkSystemSet;
 use crate::foliage_assets::FoliageAssetsState;
 use bevy::prelude::* ;
 
@@ -15,6 +16,7 @@ pub(crate) fn foliage_proto_plugin(app: &mut App) {
 
     	.add_systems(Update, (attach_mesh_to_protos, attach_material_to_protos).chain() 
     		  .run_if(in_state(FoliageAssetsState::Loaded))
+    		  .after( FoliageChunkSystemSet )
     		)
     	;
 

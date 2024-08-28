@@ -14,16 +14,21 @@ pub(crate) fn foliage_layer_plugin(app: &mut App ) {
     		
 
     	.add_systems(Update, (
+    		
     		unpack_foliage_layer_data_components,
-    		handle_foliage_layer_rebuild 
-    		))
-    	;
+    	
+    		propogate_density_updates, 
+    		handle_foliage_layer_rebuild ,
 
-
-
+    			
+    		
+    		).chain().in_set( FoliageLayerSystemSet )   )
+    	; 
   }
 
 
+#[derive(SystemSet,Hash,Clone,Debug,Eq,PartialEq)]
+pub struct FoliageLayerSystemSet;
 
 
 /// There is one foliage layer for each foliage index and it is the parent to many chunks 
@@ -293,6 +298,33 @@ fn handle_foliage_layer_rebuild(
 
 
 	}
+
+
+
+}
+
+
+
+fn propogate_density_updates(
+
+	mut commands:Commands,
+	foliage_layer_query: Query<Entity, (Without< FoliageLayerNeedsRebuild > , Changed< FoliageDensityMapU8 >)   >
+
+	){
+
+
+	for layer_entity in foliage_layer_query.iter(){
+ 
+
+		if let Some(mut cmd) = commands.get_entity(  layer_entity ) {
+
+			cmd.insert(FoliageLayerNeedsRebuild) ;
+		}
+
+
+	}
+
+
 
 
 
