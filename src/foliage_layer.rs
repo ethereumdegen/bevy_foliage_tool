@@ -29,7 +29,7 @@ pub struct FoliageLayer {
 
 	pub dimensions: IVec2,
 	pub chunk_rows: usize ,
-	//pub foliage_index: usize, //refer to the config 
+	pub foliage_index: usize, //refer to the config 
 
 	//pub density_map: FoliageDensityMapU8,
 	//pub base_height_map: FoliageBaseHeightMapU8, 
@@ -124,7 +124,7 @@ fn unpack_foliage_layer_data_components(
 
       	let density_map_data = &foliage_layer_data.density_map;
       	let base_height_map_data = &foliage_layer_data.base_height_map;
-
+      	let foliage_index = &foliage_layer_data.foliage_index; 
        
     		let foliage_config = &foliage_config_resource.0;
     		let chunk_rows = foliage_config.chunk_rows;
@@ -160,10 +160,12 @@ fn unpack_foliage_layer_data_components(
       		.insert(FoliageLayer {	
       			dimensions:  dimensions.clone() ,
       			chunk_rows: chunk_rows.clone(),
+      			foliage_index : foliage_index.clone() ,
 
       			 })
       		.insert(density_map_data.clone())
       		.insert(base_height_map_data.clone())
+      		.insert(Name::new("foliage_layer"))
       		.despawn_descendants()
       		 ; 
 
@@ -203,6 +205,7 @@ fn unpack_foliage_layer_data_components(
       		 			chunk_offset 
       		 		})
       		 		.insert(FoliageChunkNeedsRebuild)
+      		 		.insert(Name::new("foliage_chunk"))
       		 		.set_parent(  foliage_layer_entity  )
       		 		.id(); 
 

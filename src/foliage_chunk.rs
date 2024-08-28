@@ -1,6 +1,9 @@
+use crate::FoliageTypesResource;
 use crate::foliage_layer::FoliageLayer;
 use crate::foliage_layer::FoliageDensityMapU8;
 use crate::foliage_layer::FoliageBaseHeightMapU8;
+use crate::foliage_proto;
+use crate::foliage_proto::FoliageProto;
 use bevy::prelude::*;
 
 
@@ -41,7 +44,7 @@ fn handle_chunk_rebuilds(
     foliage_layer_query: Query<(&FoliageLayer, &  FoliageDensityMapU8, &FoliageBaseHeightMapU8)>, //chunks parent should have terrain data
     
 
- 
+    foliage_types_resource: Res<FoliageTypesResource>
 
 
 ){
@@ -83,6 +86,15 @@ fn handle_chunk_rebuilds(
             chunk_offset.y * chunk_dimensions.y
         ) ;
 
+        let foliage_index = &foliage_layer.foliage_index; 
+
+        let foliage_types_manifest = &foliage_types_resource.0;
+        let Some( foliage_type_definition ) = foliage_types_manifest.foliage_definitions.get( *foliage_index ) else {
+
+            warn!("Cannot build foliage chunk - missing foliage type definition for index {}", foliage_index);
+            continue;
+        };
+
 
 
         for x in chunk_data_offset.x .. chunk_data_offset.x + chunk_dimensions.x { 
@@ -97,6 +109,22 @@ fn handle_chunk_rebuilds(
                 info!("chunk_density_at_point {:?}", chunk_density_at_point);
 
                 //combine with noise here ,  then spawn foliage    proto  
+
+
+                let foliage_proto_translation = Vec3::new( 
+                    x as f32, 
+                    chunk_base_height_at_point as f32, 
+                    y as f32 
+                );
+
+                commands.spawn( SpatialBundle {
+                    transform: Transform::from_translation(foliage_proto_translation),  
+                    ..default()
+                } ).insert( FoliageProto {
+                    foliage_definition: foliage_type_definition.clone()
+                } )
+                .insert( Name::new("foliage_proto"))
+                .set_parent( chunk_entity  );
 
 
                 
