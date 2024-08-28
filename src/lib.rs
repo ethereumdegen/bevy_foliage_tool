@@ -21,6 +21,7 @@ pub mod foliage_layer;
 pub mod foliage_config;
 pub mod foliage_types;
 pub mod foliage_loading_state;
+pub mod foliage_proto;
   
 pub struct BevyFoliageToolPlugin {
     pub foliage_config_path: String 

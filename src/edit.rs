@@ -204,7 +204,7 @@ pub fn apply_command_events(
 
 
                         //for now
-                        let save_result = foliage_scene_data.save_to_disk_debug( foliage_data_files_path );
+                        let save_result = foliage_scene_data.save_to_disk( foliage_data_files_path );
 
                         if let Err(error) = save_result {
 
@@ -235,7 +235,7 @@ pub fn apply_tool_edits(
  
     mut foliage_layer_query: Query<(&FoliageLayer, &mut FoliageDensityMapU8, &FoliageBaseHeightMapU8)>, //chunks parent should have terrain data
     
-      foliage_config_resource: Res<FoliageConfigResource>,
+    foliage_config_resource: Res<FoliageConfigResource>,
     
 
     mut ev_reader: EventReader<EditFoliageEvent>,

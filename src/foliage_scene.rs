@@ -118,11 +118,16 @@ impl FoliageSceneData {
 		scene_name: &str
 	 ) -> Self { 
 
-		match Self::load_from_disk(
+
+	 	let load_from_disk_result = Self::load_from_disk(
 			foliage_data_files_path,
 			scene_name
 
-		 ) {
+		 );
+
+//	 	info!("foliage load_from_disk_result {:?}",load_from_disk_result);
+
+		match load_from_disk_result {
 
 			Some(loaded) =>  loaded ,
 
@@ -168,7 +173,7 @@ impl FoliageSceneData {
 	    }
 	}
 
-	pub fn save_to_disk_debug(
+	/*pub fn save_to_disk_debug(
 
 		 &self,
 	    foliage_data_files_path: &str
@@ -182,15 +187,18 @@ impl FoliageSceneData {
 
 	      Ok(())
 
-	}
+	}*/
 
 	// This function loads the FoliageSceneData from disk
 	pub fn load_from_disk(
-		scene_name: &str, 
-	    foliage_data_files_path: &str
+		
+	    foliage_data_files_path: &str,
+	    scene_name: &str, 
 	) -> Option<Self> {
 
 		let full_file_path = format!("{}{}", foliage_data_files_path, scene_name);
+	    
+	 
 	    // Open the file for reading
 	    let file_result = File::open( full_file_path );
 
