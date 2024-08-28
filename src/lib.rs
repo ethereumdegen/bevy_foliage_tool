@@ -3,13 +3,13 @@ use crate::foliage_assets::FoliageAssetsResource;
 use crate::foliage_types::FoliageTypesResource;
 use crate::foliage_types::FoliageTypesManifest;
 use crate::foliage_config::FoliageConfig;
-use bevy::{prelude::*};
+use bevy::render::texture::ImageLoader;
+use bevy::{asset::load_internal_asset, prelude::*};
 use edit::bevy_foliage_edits_plugin;
 use foliage_config::FoliageConfigResource;
  
- 
 
-use std::time::Duration;
+
  
 //use crate::chunk::TerrainMaterialExtension;
  
@@ -25,11 +25,18 @@ pub mod foliage_types;
 pub mod foliage_assets;
 pub mod foliage_proto;
   
+pub mod noise;
+
+ 
+
+
 pub struct BevyFoliageToolPlugin {
     pub foliage_config_path: String 
 }  
 impl Plugin for BevyFoliageToolPlugin {
     fn build(&self, app: &mut App) {
+
+ 
 
 
         let foliage_config = FoliageConfig::load_from_file(&self.foliage_config_path)
@@ -55,6 +62,8 @@ impl Plugin for BevyFoliageToolPlugin {
        // .add_plugins(foliage::foliage_plugin)
 
         .add_plugins(foliage_chunk::foliage_chunks_plugin)
+
+        .add_plugins(noise::noise_plugin)
 
         .add_plugins(foliage_scene::foliage_scene_plugin)
         .add_plugins(foliage_layer::foliage_layer_plugin)

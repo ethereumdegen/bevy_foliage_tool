@@ -1,5 +1,6 @@
 use crate::foliage_layer::FoliageLayerSystemSet;
 use crate::foliage_config::FoliageConfigResource;
+use crate::noise::NoiseResource;
 use crate::FoliageTypesResource;
 use crate::foliage_layer::FoliageLayer;
 use crate::foliage_layer::FoliageDensityMapU8;
@@ -56,6 +57,10 @@ fn handle_chunk_rebuilds(
     foliage_config_resource: Res<FoliageConfigResource> ,
 
 
+    noise_resource: Res<NoiseResource> ,
+    image_assets: Res<Assets<Image>>,
+
+
 ){
 
 
@@ -109,6 +114,14 @@ fn handle_chunk_rebuilds(
         let height_scale = foliage_config.height_scale; 
 
 
+        let max_chunk_density =  256 as f32;
+        let max_noise_value = 256 as f32;
+
+
+
+        let noise_texture_handle = &noise_resource.density_noise_texture;
+        let noise_texture = image_assets.get(   noise_texture_handle ).expect("no noise texture");
+
         for x in 0 .. chunk_dimensions.x { 
 
             for y in  0.. chunk_dimensions.y {
@@ -120,6 +133,24 @@ fn handle_chunk_rebuilds(
                 let chunk_base_height_at_point =  base_height_map[data_y_index as usize][data_x_index as usize];
 
                 if chunk_density_at_point <= 0 {continue};
+
+
+                let chunk_density_scaled = chunk_density_at_point as f32 / max_chunk_density; 
+
+
+                //this is probably wrong 
+                let noise_tex_data_index = data_y_index * chunk_dimensions.y + data_x_index ;
+
+                let noise_sample_at_point = noise_texture.data[noise_tex_data_index as usize];
+
+                let noise_sample_scaled = noise_sample_at_point as f32 / max_noise_value; 
+              //  info!("noise_sample_at_point {} {}", noise_sample_at_point , noise_sample_scaled);
+
+
+                if chunk_density_scaled < noise_sample_scaled {
+                    continue;
+                }
+
 
 //                info!("chunk_density_at_point {:?}", chunk_density_at_point);
 

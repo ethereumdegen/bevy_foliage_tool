@@ -1,8 +1,7 @@
 
 ### TODO 
 
-
-- fix redraw / rebuild 
+ - make the density care abt noise 
 
 - hide visibility for chunks that are far from the   Viewer comp (camera)
 
