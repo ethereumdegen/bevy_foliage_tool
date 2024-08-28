@@ -18,6 +18,81 @@ cargo add bevy_foliage_tool
 cargo run --example basic
 ```
 
+
+
+
+
+
+### Integration
+
+
+In your main.rs : 
+
+```
+
+    app 
+
+    .add_plugins(BevyFoliageToolPlugin {
+
+            foliage_config_path: "assets/foliage/foliage_config.ron".to_string()
+
+        } ) 
+        
+   .add_plugins(BevyFoliageProtoPlugin )
+
+   ;
+
+```
+
+
+
+
+Then make a system to load+register foliage assets:  (for BevyFoliageProtoPlugin)
+
+
+
+```
+
+
+ app  .add_systems(Startup, register_foliage_assets) ;
+
+
+
+ ...
+
+
+
+
+fn register_foliage_assets(
+
+    asset_server: Res <AssetServer>, 
+
+    mut assets_resource: ResMut<FoliageAssetsResource>, 
+
+    mut next_state: ResMut<NextState<FoliageAssetsState>>, 
+
+) {
+
+
+    let green_material: StandardMaterial = Color::srgb(0.4, 0.7, 0.6) .into();
+
+    assets_resource.register_foliage_mesh("grass1", asset_server.load( "foliage/meshes/grass1.obj" ));
+
+    assets_resource.register_foliage_material("standard_green", asset_server.add( green_material ));
+
+
+    next_state.set( FoliageAssetsState::Loaded );
+}
+
+
+
+```
+
+
+
+
+
+
  
 ### Description 
 

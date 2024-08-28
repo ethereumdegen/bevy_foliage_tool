@@ -97,12 +97,15 @@ fn handle_chunk_rebuilds(
 
 
 
-        for x in chunk_data_offset.x .. chunk_data_offset.x + chunk_dimensions.x { 
+        for x in 0 .. chunk_dimensions.x { 
 
-            for y in chunk_data_offset.y .. chunk_data_offset.y + chunk_dimensions.y {
+            for y in  0.. chunk_dimensions.y {
 
-                let chunk_density_at_point = density_map[y as usize][x as usize];
-                let chunk_base_height_at_point =  base_height_map[y as usize][x as usize];
+                let data_x_index = x + chunk_data_offset.x;
+                let data_y_index = y + chunk_data_offset.y;  
+
+                let chunk_density_at_point = density_map[data_y_index as usize][data_x_index as usize];
+                let chunk_base_height_at_point =  base_height_map[data_y_index as usize][data_x_index as usize];
 
                 if chunk_density_at_point <= 0 {continue};
 
@@ -112,9 +115,9 @@ fn handle_chunk_rebuilds(
 
 
                 let foliage_proto_translation = Vec3::new( 
-                    x as f32, 
+                    x  as f32, 
                     chunk_base_height_at_point as f32, 
-                    y as f32 
+                    y  as f32 
                 );
 
                 commands.spawn( SpatialBundle {
