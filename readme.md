@@ -1,6 +1,7 @@
 
  ## Bevy Foliage Tool
 
+![foliage_tool](https://github.com/user-attachments/assets/6fd00873-a788-48d2-b71f-3b2565b0483a)
 
 
 ### Installing
