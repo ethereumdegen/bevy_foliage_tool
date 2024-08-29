@@ -7,7 +7,7 @@
 
             mesh_name: Some("grass2"),
 
-            material_name: Some("standard_green")
+            material_name: Some("foliage_green")
             
            
         ),

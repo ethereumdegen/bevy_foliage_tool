@@ -15,9 +15,9 @@ FoliageConfig(
     //density_folder_path: Some("foliage/density"), 
     //grass_y_map_folder_path: Some("foliage/y_map"), 
  
-    foliage_data_files_path:  "foliage/foliage_scenes" ,
+    foliage_data_files_path:  "assets/foliage/foliage_scenes/" ,
 
-    foliage_types_manifest_path:  "foliage/foliage_manifest" 
+    foliage_types_manifest_path:  "assets/foliage/foliage_manifest.ron" 
     
 )
 
