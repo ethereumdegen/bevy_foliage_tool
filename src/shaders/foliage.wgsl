@@ -167,7 +167,7 @@ fn fragment(
       var pbr_input = pbr_input_from_standard_material(in, is_front);
    
 
-
+      // toon shaded normals 
       pbr_input.world_normal = vec3<f32>(0.0,1.0,0.0) ;
 
       pbr_input.N = vec3<f32>(0.0,1.0,0.0) ;
@@ -175,7 +175,7 @@ fn fragment(
 
       var pbr_out: FragmentOutput;
  
-       pbr_out.color = apply_pbr_lighting(pbr_input);  // slow 
+       pbr_out.color = apply_pbr_lighting(pbr_input);  // slow ?
 
 
 
