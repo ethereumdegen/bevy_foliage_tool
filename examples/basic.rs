@@ -1,4 +1,6 @@
  
+use bevy_foliage_tool::foliage_viewer::FoliageViewer;
+use bevy_foliage_tool::foliage_scene::FoliageSceneData;
 use bevy_foliage_tool::foliage_layer::FoliageLayer;
 use bevy_foliage_tool::foliage_layer::FoliageBaseHeightMapU16;
 use bevy_foliage_tool::foliage_layer::FoliageLayerNeedsRebuild;
@@ -23,7 +25,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
        
-        
+
         .add_plugins(bevy_obj::ObjPlugin)
 
         .add_plugins(BevyFoliageToolPlugin {
@@ -31,10 +33,11 @@ fn main() {
             foliage_config_path: "assets/foliage/foliage_config.ron".to_string()
 
         } )
-        
+
+        //only if you want to use the foliage material ext provided 
         .add_plugins(BevyFoliageMaterialPlugin) 
 
-        
+        //only if you want the plugin to attach mesh and material handles to the protos 
         .add_plugins(BevyFoliageProtoPlugin )
 
 
@@ -86,7 +89,7 @@ fn register_foliage_assets(
 
     assets_resource.register_foliage_mesh("grass1", asset_server.load( "foliage/meshes/grass1.obj" ));
 
-    //assets_resource.register_foliage_mesh("grass2", asset_server.load( "foliage/meshes/grass2.obj" ));
+   assets_resource.register_foliage_mesh("grass2", asset_server.load( "foliage/meshes/grass2.obj" ));
 
 
     assets_resource.register_foliage_material("standard_green",   FoliageMaterialHandle::Standard(   asset_server.add( green_material )  ));
@@ -144,53 +147,28 @@ fn add_height_maps_to_foliage_layers(
 
 }
 
-
-
-/*
-fn create_and_save_texture(mut commands: Commands, mut images: ResMut<Assets<Image>>) {
-    let size = Extent3d {
-        width: 1024,
-        height: 1024,
-        depth_or_array_layers: 1,
-    };
-
-    let format = TextureFormat::Rgba8Unorm;
-    let mut image = Image::new_fill(
-        size,
-        TextureDimension::D2,
-        &[0, 0, 0, 255],
-        format,
-        RenderAssetUsages::default()
-    );
-
-    // Modify the image data as needed
-    let mut img_buffer = image.data.clone();
-    let mut img_buffer: ImageBuffer<Rgba<u8>, _> = ImageBuffer::from_raw(1024, 1024, img_buffer).unwrap();
-
-    // Example: Set a pixel to white
-    img_buffer.put_pixel(512, 512, Rgba([255, 255, 255, 255]));
-
-    // Update the image data
-    image.data = img_buffer.into_raw();
-
-    // Save the image to a file
-    let texture_handle = images.add(image);
-    let texture = images.get(texture_handle).unwrap();
-    let img_buffer: ImageBuffer<Rgba<u8>, _> = ImageBuffer::from_raw(1024, 1024, texture.data.clone()).unwrap();
-    img_buffer.save("texture.png").unwrap();
-}
-
-*/
+ 
 
 
 /// set up a simple 3D scene
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands
-        .spawn(SpatialBundle::default())
-        
+     
+        let foliage_scene_name = "raven_woods_foliage.foliage";
 
-        .insert(Visibility::Visible)  // only in editor 
-        ;
+        let foliage_scenes_folder_path = "assets/foliage/foliage_scenes/";
+ 
+
+        commands
+            .spawn(SpatialBundle::default())
+            .insert( 
+                FoliageSceneData::create_or_load(  
+                foliage_scenes_folder_path, 
+                foliage_scene_name  
+                ) //this will be unpacked automagically 
+            ).insert(
+                Name::new( foliage_scene_name.clone() )
+            ) ; 
+ 
 
     // light
     commands.spawn(DirectionalLightBundle {
@@ -215,10 +193,13 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // camera
     commands
         .spawn(Camera3dBundle {
-            transform: Transform::from_xyz(20.0, 162.5, 20.0)
+            transform: Transform::from_xyz(30.0, 152.5, 30.0)
                 .looking_at(Vec3::new(900.0, 0.0, 900.0), Vec3::Y),
             ..default()
         })
+        .insert(FoliageViewer) // important to add this !! 
+
+
         //.insert(TerrainViewer::default())
        // .insert(ShadowFilteringMethod::Jimenez14)
        ;

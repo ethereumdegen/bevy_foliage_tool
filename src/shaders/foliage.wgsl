@@ -161,6 +161,8 @@ fn fragment(
 ) -> @location(0) vec4<f32> {
 
 
+    //make this more efficient ? 
+
   
       var pbr_input = pbr_input_from_standard_material(in, is_front);
    
@@ -171,9 +173,9 @@ fn fragment(
       pbr_input.N = vec3<f32>(0.0,1.0,0.0) ;
 
 
-        var pbr_out: FragmentOutput;
-
-        pbr_out.color = apply_pbr_lighting(pbr_input);
+      var pbr_out: FragmentOutput;
+ 
+       pbr_out.color = apply_pbr_lighting(pbr_input);  // slow 
 
 
 
@@ -181,7 +183,7 @@ fn fragment(
 
       // var pbr_out: FragmentOutput;
  
-      var color_out =   pbr_out.color;  // ???
+      var color_out =   pbr_out.color; //   pbr_input.material.base_color;   
     
      return color_out; 
     
