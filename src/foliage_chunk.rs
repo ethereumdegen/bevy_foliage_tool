@@ -1,3 +1,4 @@
+use crate::foliage_proto::FoliageProtoBundle;
 use crate::foliage_viewer::FoliageViewer;
 use crate::foliage_layer::FoliageLayerSystemSet;
 use crate::foliage_config::FoliageConfigResource;
@@ -227,9 +228,7 @@ fn handle_chunk_rebuilds(
                 commands.spawn( SpatialBundle {
                     transform: Transform::from_translation(foliage_proto_translation),  
                     ..default()
-                } ).insert( FoliageProto {
-                    foliage_definition: foliage_type_definition.clone()
-                } )
+                } ).insert( FoliageProtoBundle::new(  foliage_type_definition.clone() )   )
                 .insert( Name::new("foliage_proto"))
                 .set_parent( chunk_entity  );
 

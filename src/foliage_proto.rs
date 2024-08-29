@@ -1,8 +1,16 @@
 
 
+use crate::foliage_assets::FoliageMaterialHandle;
 use crate::foliage_chunk::FoliageChunkSystemSet;
 use crate::foliage_assets::FoliageAssetsState;
 use bevy::prelude::* ;
+
+use bevy::{
+    
+    pbr::{CascadeShadowConfigBuilder, NotShadowCaster, NotShadowReceiver},
+    
+};
+
 
 use crate::{  foliage_assets::FoliageAssetsResource, foliage_types::FoliageDefinition};
 
@@ -35,6 +43,37 @@ pub struct FoliageProto {
 
 
 
+#[derive(Bundle)]
+pub struct FoliageProtoBundle {
+
+	pub foliage_proto: FoliageProto,
+	pub not_shadow_caster: NotShadowCaster,
+	pub not_shadow_receiver: NotShadowReceiver, 
+
+
+}
+
+impl FoliageProtoBundle {
+
+	pub fn new(  foliage_definition: FoliageDefinition ) -> Self {
+
+
+		Self{
+
+			foliage_proto: FoliageProto {
+				foliage_definition
+			},
+			 not_shadow_caster: NotShadowCaster,
+			 not_shadow_receiver: NotShadowReceiver
+
+		}
+
+	}
+
+}
+
+
+
  
 
 fn attach_mesh_to_protos(
@@ -57,7 +96,10 @@ fn attach_mesh_to_protos(
 			let mesh_handle = foliage_assets_resource.foliage_mesh_handles.get( mesh_name );
 
 			if let Some(mesh_handle) = mesh_handle {
-				commands.entity(proto_entity).try_insert(  mesh_handle.clone() );
+				commands.entity(proto_entity)
+				.try_insert(  mesh_handle.clone() )
+
+				;
 			}
 			
 		} 
@@ -92,7 +134,12 @@ fn attach_material_to_protos(
 			let material_handle = foliage_assets_resource.foliage_material_handles.get( material_name );
 
 			if let Some(material_handle) = material_handle {
-				commands.entity(proto_entity).try_insert(  material_handle.clone() );
+
+			 match material_handle {
+		        FoliageMaterialHandle::Standard(mat_handle) => {commands.entity(proto_entity).try_insert(  mat_handle.clone() );} ,
+		         FoliageMaterialHandle::Extended(mat_handle) =>  {commands.entity(proto_entity).try_insert(  mat_handle.clone() ); } ,
+		      }
+				
 			}
 			
 		}
