@@ -8,7 +8,7 @@
  A very bevy-centric foliage painting plugin that takes advantage of entities, components and systems as much as possible to be as easy to understand and interact with as possible. 
   
 
- An example of it being used in the bevy_mesh_terrain_editor to allow the editor to paint regions 
+ An example of the tool being used in the spirit_editor:
   
 
 
