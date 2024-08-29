@@ -1,8 +1,7 @@
 use bevy::{asset::load_internal_asset, prelude::*};
 
-
 use bevy::asset::VisitAssetDependencies;
- 
+
 use bevy::reflect::TypePath;
 use bevy::render::render_resource::*;
 
@@ -19,39 +18,20 @@ pub const FOLIAGE_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(1653284
 
 pub type FoliageMaterialExtension = ExtendedMaterial<StandardMaterial, FoliageMaterial>;
 
+pub fn foliage_material_plugin(app: &mut App) {
+    load_internal_asset!(
+        app,
+        FOLIAGE_SHADER_HANDLE,
+        "shaders/foliage.wgsl",
+        Shader::from_wgsl
+    );
 
-pub fn foliage_material_plugin(app: &mut App){
-
-
-
-	    load_internal_asset!(
-            app,
-            FOLIAGE_SHADER_HANDLE,
-            "shaders/foliage.wgsl",
-            Shader::from_wgsl
-        );
-
-        app
-
-         .add_plugins(MaterialPlugin::<FoliageMaterialExtension>::default()) 
-       
-
-
-        ;
-
-
-
-
+    app.add_plugins(MaterialPlugin::<FoliageMaterialExtension>::default());
 }
-
-
 
 #[derive(Asset, AsBindGroup, TypePath, Clone, Debug, Default)]
 pub struct FoliageMaterial {
-    
-    
-
-   /* #[uniform(20)]
+    /* #[uniform(20)]
     pub chunk_uniforms: ChunkMaterialUniforms,
 
     #[uniform(21)]
@@ -89,14 +69,12 @@ impl MaterialExtension for FoliageMaterial {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
     }
 
-     fn deferred_vertex_shader() -> ShaderRef {
+    fn deferred_vertex_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
     }
 
-        //important for proper depth testing 
-     fn prepass_vertex_shader() -> ShaderRef {
+    //important for proper depth testing
+    fn prepass_vertex_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
     }
 }
-
-

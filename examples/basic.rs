@@ -1,21 +1,20 @@
- 
-use bevy_foliage_tool::foliage_viewer::FoliageViewer;
-use bevy_foliage_tool::foliage_scene::FoliageSceneData;
-use bevy_foliage_tool::foliage_layer::FoliageLayer;
-use bevy_foliage_tool::foliage_layer::FoliageBaseHeightMapU16;
-use bevy_foliage_tool::foliage_layer::FoliageLayerNeedsRebuild;
-use bevy_foliage_tool::foliage_assets::FoliageAssetsResource;
-use bevy_foliage_tool::foliage_material::FoliageMaterialExtension;
-use bevy_foliage_tool::foliage_assets::FoliageMaterialHandle;
-use bevy_foliage_tool::foliage_assets::FoliageAssetsState;
-use bevy_foliage_tool::BevyFoliageMaterialPlugin;
-use bevy_foliage_tool::BevyFoliageProtoPlugin;
-use bevy_foliage_tool::BevyFoliageToolPlugin;
 use bevy::input::mouse::MouseMotion;
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy::{pbr::ShadowFilteringMethod, prelude::*};
- 
+use bevy_foliage_tool::foliage_assets::FoliageAssetsResource;
+use bevy_foliage_tool::foliage_assets::FoliageAssetsState;
+use bevy_foliage_tool::foliage_assets::FoliageMaterialHandle;
+use bevy_foliage_tool::foliage_layer::FoliageBaseHeightMapU16;
+use bevy_foliage_tool::foliage_layer::FoliageLayer;
+use bevy_foliage_tool::foliage_layer::FoliageLayerNeedsRebuild;
+use bevy_foliage_tool::foliage_material::FoliageMaterialExtension;
+use bevy_foliage_tool::foliage_scene::FoliageSceneData;
+use bevy_foliage_tool::foliage_viewer::FoliageViewer;
+use bevy_foliage_tool::BevyFoliageMaterialPlugin;
+use bevy_foliage_tool::BevyFoliageProtoPlugin;
+use bevy_foliage_tool::BevyFoliageToolPlugin;
+
 use image::{ImageBuffer, Rgba};
 
 //#[derive(Resource)]
@@ -24,158 +23,109 @@ use image::{ImageBuffer, Rgba};
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-       
-
         .add_plugins(bevy_obj::ObjPlugin)
-
         .add_plugins(BevyFoliageToolPlugin {
-
-            foliage_config_path: "assets/foliage/foliage_config.ron".to_string()
-
-        } )
-
-        //only if you want to use the foliage material ext provided 
-        .add_plugins(BevyFoliageMaterialPlugin) 
-
-        //only if you want the plugin to attach mesh and material handles to the protos 
-        .add_plugins(BevyFoliageProtoPlugin )
-
-
+            foliage_config_path: "assets/foliage/foliage_config.ron".to_string(),
+        })
+        //only if you want to use the foliage material ext provided
+        .add_plugins(BevyFoliageMaterialPlugin)
+        //only if you want the plugin to attach mesh and material handles to the protos
+        .add_plugins(BevyFoliageProtoPlugin)
         .add_systems(Startup, setup)
-     //   .add_systems(Startup,create_and_save_texture)
+        //   .add_systems(Startup,create_and_save_texture)
         .add_systems(Update, update_camera_look)
         .add_systems(Update, update_camera_move)
         .add_systems(Update, update_directional_light_position)
-
-           .add_systems(Startup, register_foliage_assets)
-
-           .add_systems(Update, add_height_maps_to_foliage_layers)
+        .add_systems(Startup, register_foliage_assets)
+        .add_systems(Update, add_height_maps_to_foliage_layers)
         .run();
 }
 
-
-
 fn register_foliage_assets(
+    asset_server: Res<AssetServer>,
 
-    asset_server: Res <AssetServer>, 
+    mut assets_resource: ResMut<FoliageAssetsResource>,
 
-    mut assets_resource: ResMut<FoliageAssetsResource>, 
-
-    mut next_state: ResMut<NextState<FoliageAssetsState>>, 
-
+    mut next_state: ResMut<NextState<FoliageAssetsState>>,
 ) {
-
-
     let foliage_material = FoliageMaterialExtension {
-        base: StandardMaterial { 
-            base_color:  Color::srgb(0.13, 0.37, 0.11) .into() ,  // not needed ? 
+        base: StandardMaterial {
+            base_color: Color::srgb(0.13, 0.37, 0.11).into(), // not needed ?
             //double_sided: true ,
-            cull_mode: None, 
-             ..default()
-         },
-
+            cull_mode: None,
+            ..default()
+        },
 
         ..default()
-
- 
-       
     };
 
-    let mut green_material: StandardMaterial = Color::srgb(0.13, 0.37, 0.11) .into();
+    let mut green_material: StandardMaterial = Color::srgb(0.13, 0.37, 0.11).into();
     green_material.unlit = true;
-    green_material.double_sided = true ;
-    //ideally, normals will point UP 
+    green_material.double_sided = true;
+    //ideally, normals will point UP
 
+    assets_resource.register_foliage_mesh("grass1", asset_server.load("foliage/meshes/grass1.obj"));
 
-    assets_resource.register_foliage_mesh("grass1", asset_server.load( "foliage/meshes/grass1.obj" ));
+    assets_resource.register_foliage_mesh("grass2", asset_server.load("foliage/meshes/grass2.obj"));
 
-   assets_resource.register_foliage_mesh("grass2", asset_server.load( "foliage/meshes/grass2.obj" ));
+    assets_resource.register_foliage_material(
+        "standard_green",
+        FoliageMaterialHandle::Standard(asset_server.add(green_material)),
+    );
+    assets_resource.register_foliage_material(
+        "foliage_green",
+        FoliageMaterialHandle::Extended(asset_server.add(foliage_material)),
+    );
 
-
-    assets_resource.register_foliage_material("standard_green",   FoliageMaterialHandle::Standard(   asset_server.add( green_material )  ));
-     assets_resource.register_foliage_material("foliage_green",  FoliageMaterialHandle::Extended(   asset_server.add( foliage_material )  ) );
-
-
-    next_state.set( FoliageAssetsState::Loaded );
+    next_state.set(FoliageAssetsState::Loaded);
 }
 
+fn add_height_maps_to_foliage_layers(
+    mut commands: Commands,
+    foliage_layer_query: Query<(Entity, &FoliageLayer), Without<FoliageBaseHeightMapU16>>,
+) {
+    let terrain_dimensions = 1024;
 
+    for (foliage_layer_entity, foliage_layer) in foliage_layer_query.iter() {
+        //  let dimensions = foliage_layer.dimensions.clone();
 
-
-fn add_height_maps_to_foliage_layers(  
-     mut commands:  Commands,
-    foliage_layer_query: Query<(Entity,&FoliageLayer),    
-        Without<FoliageBaseHeightMapU16>
-     >, 
-
-   
-
-){  
-
-     
-
-        let terrain_dimensions = 1024;
- 
-    for (foliage_layer_entity,foliage_layer) in foliage_layer_query.iter(){
-
-       //  let dimensions = foliage_layer.dimensions.clone();
-
-
-         let mut combined_heightmap = vec![vec![0u16; terrain_dimensions]; terrain_dimensions];
-
+        let mut combined_heightmap = vec![vec![0u16; terrain_dimensions]; terrain_dimensions];
 
         /*if combined_height_map.is_empty() {
             warn!("no chunk height data to provide to foliage system");
             continue
         }; */
 
-        let base_height_comp = FoliageBaseHeightMapU16 (  combined_heightmap   );
+        let base_height_comp = FoliageBaseHeightMapU16(combined_heightmap);
 
-       
-        commands.entity(foliage_layer_entity).try_insert(
-            base_height_comp
-        ); 
+        commands
+            .entity(foliage_layer_entity)
+            .try_insert(base_height_comp);
 
-         commands.entity(foliage_layer_entity).try_insert(
-            FoliageLayerNeedsRebuild
-        ); 
-
-
+        commands
+            .entity(foliage_layer_entity)
+            .try_insert(FoliageLayerNeedsRebuild);
     }
- 
-
-
 }
-
- 
-
 
 /// set up a simple 3D scene
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-     
-        let foliage_scene_name = "raven_woods_foliage.foliage";
+    let foliage_scene_name = "raven_woods_foliage.foliage";
 
-        let foliage_scenes_folder_path = "assets/foliage/foliage_scenes/";
- 
+    let foliage_scenes_folder_path = "assets/foliage/foliage_scenes/";
 
-        commands
-            .spawn(SpatialBundle::default())
-            .insert( 
-                FoliageSceneData::create_or_load(  
-                foliage_scenes_folder_path, 
-                foliage_scene_name  
-                ) //this will be unpacked automagically 
-            ).insert(
-                Name::new( foliage_scene_name.clone() )
-            ) ; 
- 
+    commands
+        .spawn(SpatialBundle::default())
+        .insert(
+            FoliageSceneData::create_or_load(foliage_scenes_folder_path, foliage_scene_name), //this will be unpacked automagically
+        )
+        .insert(Name::new(foliage_scene_name.clone()));
 
     // light
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             //shadow_depth_bias: 0.5,
             //shadow_normal_bias: 0.5,
-
             color: Color::WHITE,
 
             ..default()
@@ -257,21 +207,20 @@ fn update_camera_move(
     }
 }
 
-
 fn update_directional_light_position(
     mut query: Query<&mut Transform, With<DirectionalLight>>,
-   
+
     time: Res<Time>,
 ) {
-
     let current_time = time.elapsed();
 
+    //   let delta_time = time.delta_seconds();
 
- //   let delta_time = time.delta_seconds();
-    
     let SECONDS_IN_A_CYCLE = 20.0;
 
-    let angle = (current_time.as_millis() as f32 / (SECONDS_IN_A_CYCLE* 1000.0) ) * std::f32::consts::PI * 2.0; // Convert time to radians
+    let angle = (current_time.as_millis() as f32 / (SECONDS_IN_A_CYCLE * 1000.0))
+        * std::f32::consts::PI
+        * 2.0; // Convert time to radians
 
     let radius = 20.0; // Adjust the radius of the sun's orbit
     let x = angle.cos() * radius;
@@ -279,7 +228,6 @@ fn update_directional_light_position(
     let z = 0.0;
 
     for mut transform in query.iter_mut() {
-
         transform.translation = Vec3::new(x, y, z);
         transform.look_at(Vec3::ZERO, Vec3::Y);
     }
