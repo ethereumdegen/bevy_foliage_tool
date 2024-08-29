@@ -104,7 +104,30 @@ fn register_foliage_assets(
 
 
 
+Then, define your foliage types : one for each layer 
 
+```
+ (
+    foliage_definitions: [
+
+      //layer index 0 
+        (
+            name: "Grass",
+
+            mesh_name: Some("grass1"),
+
+            material_name: Some("standard_green")
+            
+           
+        ),
+        
+        
+
+
+	]
+)
+
+```
 
 
 
