@@ -8,6 +8,10 @@
  A very bevy-centric foliage painting plugin that takes advantage of entities, components and systems as much as possible to be as easy to understand and interact with as possible. 
   
 
+![bevy-grass2](https://github.com/user-attachments/assets/65af55bb-25b0-4c78-b4cc-4209792d3c33)
+
+
+
  An example of the tool being used in the spirit_editor:
   
 
