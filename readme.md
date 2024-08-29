@@ -104,9 +104,13 @@ fn register_foliage_assets(
  
  ![image](https://github.com/ethereumdegen/bevy_regions/assets/6249263/00192676-9010-4727-9cca-6ee2bbb55c96)
 
-## Texture
  
 
+
+### Do you like this crate?  Support the creator on Patreon
+https://www.patreon.com/infernaltoast 
+ 
+ [![creatinggames-preview](https://github.com/user-attachments/assets/7e7904c1-5f2b-47b6-84dd-5626cb7baca0)](https://www.patreon.com/infernaltoast)
 
  
  
