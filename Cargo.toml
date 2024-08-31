@@ -10,7 +10,7 @@ edition = "2021"
 authors = [ "ethereumdegen" ]
 license = "MIT"
 readme = "readme.md"
-repository = "https://github.com/ethereumdegen/bevy_regions"
+repository = "https://github.com/ethereumdegen/bevy_foliage_tool"
 exclude = [ "/assets/", "/examples/" ]
 keywords = [ "region" , "bevy" ]
 
