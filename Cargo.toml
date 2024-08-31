@@ -12,7 +12,7 @@ license = "MIT"
 readme = "readme.md"
 repository = "https://github.com/ethereumdegen/bevy_foliage_tool"
 exclude = [ "/assets/", "/examples/" ]
-keywords = [ "region" , "bevy" ]
+keywords = [ "foliage" , "bevy" ]
 
 
 [dependencies]
