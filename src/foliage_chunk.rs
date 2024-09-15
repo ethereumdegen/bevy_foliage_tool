@@ -12,12 +12,13 @@ use crate::FoliageTypesResource;
 use bevy::prelude::*;
 
 pub(crate) fn foliage_chunks_plugin(app: &mut App) {
-    app.add_systems(
-        Update,
+    app
+    .add_systems(
+        PostUpdate,
         (handle_chunk_rebuilds, update_chunk_visibility)
             .chain()
-            .in_set(FoliageChunkSystemSet)
-            .before(FoliageLayerSystemSet),
+           // .in_set(FoliageChunkSystemSet)
+           // .before(FoliageLayerSystemSet),
     );
 }
 
@@ -195,8 +196,8 @@ fn handle_chunk_rebuilds(
                         transform: Transform::from_translation(foliage_proto_translation),
                         ..default()
                     })
-                    .insert(FoliageProtoBundle::new(foliage_type_definition.clone()))
-                    .insert(Name::new("foliage_proto"))
+                    .try_insert(FoliageProtoBundle::new(foliage_type_definition.clone()))
+                    .try_insert(Name::new("foliage_proto"))
                     .set_parent(chunk_entity);
             }
         }
