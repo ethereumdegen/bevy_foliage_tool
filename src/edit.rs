@@ -104,7 +104,9 @@ pub enum FoliageCommandEvent {
 
 pub fn apply_command_events(
     // asset_server: Res<AssetServer>,
-    foliage_scene_query: Query<&FoliageScene>,
+    foliage_scene_query: Query<(&FoliageScene,&Name)>,
+
+
 
     foliage_layer_query: Query<(
         &FoliageLayer,
@@ -130,8 +132,8 @@ pub fn apply_command_events(
 
                 let foliage_data_files_path = &foliage_config.foliage_data_files_path;
 
-                for foliage_scene in foliage_scene_query.iter() {
-                    let foliage_scene_name = foliage_scene.foliage_scene_name.clone();
+                for (foliage_scene,foliage_scene_name) in foliage_scene_query.iter() {
+                    //let foliage_scene_name = foliage_scene.foliage_scene_name.clone();
                     let mut layers_data_map = HashMap::new();
 
                     let foliage_layer_entities_map = &foliage_scene.foliage_layer_entities_map;
@@ -163,12 +165,14 @@ pub fn apply_command_events(
                     }
 
                     let foliage_scene_data = FoliageSceneData {
-                        foliage_scene_name: foliage_scene_name,
+                        foliage_scene_name: foliage_scene_name.to_string(),  // so we can rename it ! 
                         foliage_layers: layers_data_map,
                     };
 
                     //for now
                     let save_result = foliage_scene_data.save_to_disk(foliage_data_files_path);
+
+                    info!("saving foliage {:?} {} {}", save_result, foliage_data_files_path , foliage_scene_name);
 
                     if let Err(error) = save_result {
                         warn!(error);
