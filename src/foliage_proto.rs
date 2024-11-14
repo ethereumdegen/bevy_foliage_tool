@@ -22,6 +22,10 @@ pub struct FoliageProto {
     pub foliage_definition: FoliageDefinition,
 }
 
+#[derive(Component, Debug, Clone)]
+pub struct AttachedFoliageMaterial ; 
+
+
 #[derive(Bundle)]
 pub struct FoliageProtoBundle {
     pub foliage_proto: FoliageProto,
@@ -64,7 +68,7 @@ fn attach_mesh_to_protos(
 
 fn attach_material_to_protos(
     mut commands: Commands,
-    proto_query: Query<(Entity, &FoliageProto), Without<Handle<StandardMaterial>>>,
+    proto_query: Query<(Entity, &FoliageProto),  Without<AttachedFoliageMaterial >   >,
 
     foliage_assets_resource: Res<FoliageAssetsResource>,
 ) {
@@ -81,10 +85,14 @@ fn attach_material_to_protos(
             if let Some(material_handle) = material_handle {
                 match material_handle {
                     FoliageMaterialHandle::Standard(mat_handle) => {
-                        commands.entity(proto_entity).try_insert(mat_handle.clone());
+                        commands.entity(proto_entity)
+                        .try_insert(AttachedFoliageMaterial)
+                        .try_insert(mat_handle.clone());
                     }
                     FoliageMaterialHandle::Extended(mat_handle) => {
-                        commands.entity(proto_entity).try_insert(mat_handle.clone());
+                        commands.entity(proto_entity)
+                        .try_insert(AttachedFoliageMaterial)
+                        .try_insert(mat_handle.clone());
                     }
                 }
             }
