@@ -10,7 +10,10 @@ use crate::{foliage_assets::FoliageAssetsResource, foliage_types::FoliageDefinit
 pub(crate) fn foliage_proto_plugin(app: &mut App) {
     app.add_systems(
         Update,
-        (attach_mesh_to_protos, attach_material_to_protos)
+        (
+            attach_mesh_to_protos, 
+            attach_material_to_protos
+            )
             .chain()
             .run_if(in_state(FoliageAssetsState::Loaded))
             .after(FoliageChunkSystemSet),

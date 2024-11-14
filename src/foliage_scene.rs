@@ -30,24 +30,7 @@ pub struct FoliageSceneData {
     pub foliage_scene_name: String,
     pub foliage_layers: HashMap<usize, FoliageLayerData>,
 }
-
-/*
-impl Default for FoliageScene {
-
-
-
-    fn default() -> Self {
-
-        Self  {
-            foliage_layers: HashMap::new(),
-
-        }
-
-      }
-
-
-}
-*/
+ 
 
 impl FoliageSceneData {
     pub fn new(scene_name: &str) -> Self {
@@ -56,26 +39,7 @@ impl FoliageSceneData {
             foliage_layers: HashMap::new(),
         }
     }
-
-    /*pub fn load_or_create(
-        scene_name: &str
-    ) -> Self {
-
-
-        //try to load from file..  if fail, then
-
-
-
-        Self::new( scene_name )
-    }*/
-
-    /*	pub fn save_to_disk(
-        &self,
-        foliage_data_files_path: &str
-    )  -> bool {
-
-        true
-    }*/
+ 
 
     pub fn create_or_load(foliage_data_files_path: &str, scene_name: &str) -> Self {
         let load_from_disk_result = Self::load_from_disk(foliage_data_files_path, scene_name);
@@ -118,22 +82,7 @@ impl FoliageSceneData {
         }
     }
 
-    /*pub fn save_to_disk_debug(
-
-         &self,
-        foliage_data_files_path: &str
-
-        )  -> Result<(), String>  {
-        let scene_name = self.foliage_scene_name.clone();
-        let full_file_path = format!("{}{}", foliage_data_files_path, scene_name);
-
-         let ron = ron::ser::to_string(&self).unwrap();
-          let file_saved = std::fs::write(full_file_path, ron);
-
-          Ok(())
-
-    }*/
-
+    
     // This function loads the FoliageSceneData from disk
     pub fn load_from_disk(foliage_data_files_path: &str, scene_name: &str) -> Option<Self> {
         let full_file_path = format!("{}{}", foliage_data_files_path, scene_name);

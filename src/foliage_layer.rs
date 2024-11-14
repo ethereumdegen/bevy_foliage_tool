@@ -189,7 +189,7 @@ fn handle_foliage_layer_rebuild(
             &FoliageBaseHeightMapU16,
             &Children,
         ),
-        With<FoliageLayerNeedsRebuild>,
+        Added<FoliageLayerNeedsRebuild>,
     >,
 
     foliage_chunk_query: Query<&FoliageChunk>,

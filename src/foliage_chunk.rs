@@ -153,6 +153,8 @@ fn handle_chunk_rebuilds(
             .get(noise_texture_handle)
             .expect("no noise texture");
 
+        info!("rebuild foliage chunk");
+
         for x in 0..chunk_dimensions.x {
             for y in 0..chunk_dimensions.y {
                 let data_x_index = x + chunk_data_offset.x;
