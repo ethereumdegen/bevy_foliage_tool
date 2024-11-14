@@ -21,10 +21,7 @@ pub(crate) fn foliage_proto_plugin(app: &mut App) {
 pub struct FoliageProto {
     pub foliage_definition: FoliageDefinition,
 }
-
-#[derive(Component, Debug, Clone)]
-pub struct AttachedFoliageMaterial ; 
-
+ 
 
 #[derive(Bundle)]
 pub struct FoliageProtoBundle {
@@ -45,7 +42,7 @@ impl FoliageProtoBundle {
 
 fn attach_mesh_to_protos(
     mut commands: Commands,
-    proto_query: Query<(Entity, &FoliageProto), Without<Handle<Mesh>>>,
+    proto_query: Query<(Entity, &FoliageProto), Added< FoliageProto >>,
 
     foliage_assets_resource: Res<FoliageAssetsResource>,
 ) {
@@ -68,7 +65,7 @@ fn attach_mesh_to_protos(
 
 fn attach_material_to_protos(
     mut commands: Commands,
-    proto_query: Query<(Entity, &FoliageProto),  Without<AttachedFoliageMaterial >   >,
+    proto_query: Query<(Entity, &FoliageProto),  Added<FoliageProto >   >,
 
     foliage_assets_resource: Res<FoliageAssetsResource>,
 ) {
@@ -85,13 +82,11 @@ fn attach_material_to_protos(
             if let Some(material_handle) = material_handle {
                 match material_handle {
                     FoliageMaterialHandle::Standard(mat_handle) => {
-                        commands.entity(proto_entity)
-                        .try_insert(AttachedFoliageMaterial)
+                        commands.entity(proto_entity) 
                         .try_insert(mat_handle.clone());
                     }
                     FoliageMaterialHandle::Extended(mat_handle) => {
-                        commands.entity(proto_entity)
-                        .try_insert(AttachedFoliageMaterial)
+                        commands.entity(proto_entity) 
                         .try_insert(mat_handle.clone());
                     }
                 }
