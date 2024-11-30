@@ -3,7 +3,7 @@ name = "bevy_foliage_tool"
 description = "A configurable foliage painting system using perlin noise, grayscale maps, and chunked visibility"
  
  
-version = "0.14.9"
+version = "0.15.0"
  
  
 edition = "2021"
@@ -17,7 +17,7 @@ keywords = [ "foliage" , "bevy" ]
 
 [dependencies]
 anyhow = "1.0.75"
-bevy = "0.14.1"
+bevy = "0.15.0"
 
 futures-lite = "1.13.0"
 image = "0.25.1" 
@@ -37,7 +37,7 @@ bincode = "1.3.3"
 
 
 [dev-dependencies]
-bevy_obj = "0.14.0"
+bevy_obj = "0.15.0"
  
 [[example]]
 name = "basic"

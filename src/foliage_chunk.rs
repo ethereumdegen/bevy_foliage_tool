@@ -153,7 +153,7 @@ fn handle_chunk_rebuilds(
             .get(noise_texture_handle)
             .expect("no noise texture");
 
-        info!("rebuild foliage chunk");
+       //   info!("rebuild foliage chunk");
 
         for x in 0..chunk_dimensions.x {
             for y in 0..chunk_dimensions.y {
@@ -194,12 +194,15 @@ fn handle_chunk_rebuilds(
                 );
 
                 commands
-                    .spawn(SpatialBundle {
-                        transform: Transform::from_translation(foliage_proto_translation),
-                        ..default()
-                    })
-                    .try_insert(FoliageProtoBundle::new(foliage_type_definition.clone()))
-                    .try_insert(Name::new("foliage_proto"))
+                    .spawn( (
+
+                        Transform::from_translation(foliage_proto_translation),
+                        FoliageProtoBundle::new(foliage_type_definition.clone()),
+                        Name::new("foliage_proto")
+
+
+                        )  )
+                    
                     .set_parent(chunk_entity);
             }
         }

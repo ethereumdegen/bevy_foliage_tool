@@ -2,7 +2,6 @@ use crate::foliage_assets::FoliageAssetsResource;
 use crate::foliage_config::FoliageConfig;
 use crate::foliage_types::FoliageTypesManifest;
 use crate::foliage_types::FoliageTypesResource;
-use bevy::render::texture::ImageLoader;
 use bevy::{asset::load_internal_asset, prelude::*};
 use edit::bevy_foliage_edits_plugin;
 use foliage_config::FoliageConfigResource;

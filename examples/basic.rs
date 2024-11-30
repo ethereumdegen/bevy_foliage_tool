@@ -115,7 +115,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let foliage_scenes_folder_path = "assets/foliage/foliage_scenes/";
 
     commands
-        .spawn(SpatialBundle::default())
+        .spawn(Transform::default())
         .insert(
             FoliageSceneData::create_or_load(foliage_scenes_folder_path, foliage_scene_name), //this will be unpacked automagically
         )

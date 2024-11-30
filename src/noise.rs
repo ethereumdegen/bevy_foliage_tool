@@ -1,13 +1,10 @@
+use bevy::asset::RenderAssetUsages;
+use bevy::image::{CompressedImageFormats, ImageSampler, ImageType};
 use bevy::prelude::*;
 
 use bevy::{
-    asset::{Assets, Handle},
-    render::{
-        extract_resource::ExtractResource,
-        prelude::Image,
-        render_asset::RenderAssetUsages,
-        texture::{CompressedImageFormats, ImageSampler, ImageType},
-    },
+    asset::{Handle},
+    
 };
 pub fn noise_plugin(app: &mut App) {
     let asset_server = app.world().resource::<AssetServer>();

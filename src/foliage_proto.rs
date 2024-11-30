@@ -20,12 +20,14 @@ pub(crate) fn foliage_proto_plugin(app: &mut App) {
     );
 }
 
+
+
 #[derive(Component, Debug, Clone)]
 pub struct FoliageProto {
     pub foliage_definition: FoliageDefinition,
 }
  
-
+//TODO replace me with required components
 #[derive(Bundle)]
 pub struct FoliageProtoBundle {
     pub foliage_proto: FoliageProto,
@@ -60,7 +62,7 @@ fn attach_mesh_to_protos(
             if let Some(mesh_handle) = mesh_handle {
                 commands
                     .entity(proto_entity)
-                    .try_insert(mesh_handle.clone());
+                    .try_insert(Mesh3d(mesh_handle.clone()));
             }
         }
     }
@@ -86,11 +88,11 @@ fn attach_material_to_protos(
                 match material_handle {
                     FoliageMaterialHandle::Standard(mat_handle) => {
                         commands.entity(proto_entity) 
-                        .try_insert(mat_handle.clone());
+                        .try_insert(MeshMaterial3d( mat_handle.clone()));
                     }
                     FoliageMaterialHandle::Extended(mat_handle) => {
                         commands.entity(proto_entity) 
-                        .try_insert(mat_handle.clone());
+                        .try_insert(MeshMaterial3d(mat_handle.clone()));
                     }
                 }
             }
