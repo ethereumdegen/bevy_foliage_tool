@@ -168,7 +168,7 @@ fn unpack_foliage_scene_data_components(
                     info!("spawn foliage layer data {}",layer_index );
 
                     let layer_entity = child_builder
-                        .spawn((SpatialBundle::default(), layer_data.clone()))
+                        .spawn((Transform::default(), Visibility::default(),  layer_data.clone()))
                         .id();
 
                     foliage_layer_entities_map.insert(layer_index, layer_entity);

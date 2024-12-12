@@ -198,7 +198,8 @@ fn handle_chunk_rebuilds(
 
                         Transform::from_translation(foliage_proto_translation),
                         FoliageProtoBundle::new(foliage_type_definition.clone()),
-                        Name::new("foliage_proto")
+                        Name::new("foliage_proto"),
+                        Visibility::default()
 
 
                         )  )
