@@ -15,7 +15,7 @@ pub(crate) fn foliage_scene_plugin(app: &mut App) {
     app.add_systems(Update, unpack_foliage_scene_data_components);
 }
 
-#[derive(Component, Clone, Debug )]
+#[derive(Component, Clone, Debug)]
 pub struct FoliageScene {
     pub foliage_scene_name: String,
 
@@ -30,7 +30,6 @@ pub struct FoliageSceneData {
     pub foliage_scene_name: String,
     pub foliage_layers: HashMap<usize, FoliageLayerData>,
 }
- 
 
 impl FoliageSceneData {
     pub fn new(scene_name: &str) -> Self {
@@ -39,7 +38,6 @@ impl FoliageSceneData {
             foliage_layers: HashMap::new(),
         }
     }
- 
 
     pub fn create_or_load(foliage_data_files_path: &str, scene_name: &str) -> Self {
         let load_from_disk_result = Self::load_from_disk(foliage_data_files_path, scene_name);
@@ -82,7 +80,6 @@ impl FoliageSceneData {
         }
     }
 
-    
     // This function loads the FoliageSceneData from disk
     pub fn load_from_disk(foliage_data_files_path: &str, scene_name: &str) -> Option<Self> {
         let full_file_path = format!("{}{}", foliage_data_files_path, scene_name);
@@ -126,33 +123,26 @@ fn unpack_foliage_scene_data_components(
     foliage_config_resource: Res<FoliageConfigResource>,
     foliage_types_resource: Res<FoliageTypesResource>,
 ) {
-    
-
     for (foliage_scene_entity, foliage_scene_data) in foliage_scene_data_query.iter() {
         let mut layers_data_array = foliage_scene_data.foliage_layers.clone();
 
         let foliage_config = &foliage_config_resource.0;
         let boundary_dimensions = foliage_config.boundary_dimensions;
 
-
-            //this has an issue .. 
+        //this has an issue ..
         //if layers_data_array.is_empty() {
-            //add in the ones from the types manifest
-            let foliage_definitions = &foliage_types_resource.0.foliage_definitions;
+        //add in the ones from the types manifest
+        let foliage_definitions = &foliage_types_resource.0.foliage_definitions;
 
-            for (foliage_def_index, _foliage_definition) in foliage_definitions.iter().enumerate() {
-
-                if foliage_def_index >= layers_data_array.len() {
-
-                     layers_data_array.insert(
-                            foliage_def_index,
-                            FoliageLayerData::new(foliage_def_index, boundary_dimensions),
-                        );
-
-                }
-               
+        for (foliage_def_index, _foliage_definition) in foliage_definitions.iter().enumerate() {
+            if foliage_def_index >= layers_data_array.len() {
+                layers_data_array.insert(
+                    foliage_def_index,
+                    FoliageLayerData::new(foliage_def_index, boundary_dimensions),
+                );
             }
-     //  }
+        }
+        //  }
 
         let mut foliage_layer_entities_map = HashMap::new();
 
@@ -165,10 +155,14 @@ fn unpack_foliage_scene_data_components(
             .remove::<FoliageSceneData>()
             .with_children(|child_builder| {
                 for (layer_index, layer_data) in layers_data_array {
-                    info!("spawn foliage layer data {}",layer_index );
+                    info!("spawn foliage layer data {}", layer_index);
 
                     let layer_entity = child_builder
-                        .spawn((Transform::default(), Visibility::default(),  layer_data.clone()))
+                        .spawn((
+                            Transform::default(),
+                            Visibility::default(),
+                            layer_data.clone(),
+                        ))
                         .id();
 
                     foliage_layer_entities_map.insert(layer_index, layer_entity);

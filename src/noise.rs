@@ -2,10 +2,7 @@ use bevy::asset::RenderAssetUsages;
 use bevy::image::{CompressedImageFormats, ImageSampler, ImageType};
 use bevy::prelude::*;
 
-use bevy::{
-    asset::{Handle},
-    
-};
+use bevy::asset::Handle;
 pub fn noise_plugin(app: &mut App) {
     let asset_server = app.world().resource::<AssetServer>();
 

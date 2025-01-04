@@ -5,7 +5,7 @@ FoliageConfig(
     boundary_dimensions: (1024, 1024), // IVec2(x, y)
     chunk_rows: 16, // 16 x 16 .. 64 units each 
 
-  
+    random_seed: 3263503, 
     
     render_distance:  Some(750.0), 
    

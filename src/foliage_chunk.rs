@@ -3,6 +3,9 @@ use crate::foliage_layer::FoliageBaseHeightMapU16;
 use crate::foliage_layer::FoliageDensityMapU8;
 use crate::foliage_layer::FoliageLayer;
 use crate::foliage_layer::FoliageLayerSystemSet;
+
+use rand::Rng;
+
 use crate::foliage_proto;
 use crate::foliage_proto::FoliageProto;
 use crate::foliage_proto::FoliageProtoBundle;
@@ -12,13 +15,10 @@ use crate::FoliageTypesResource;
 use bevy::prelude::*;
 
 pub(crate) fn foliage_chunks_plugin(app: &mut App) {
-    app
-    .add_systems(
+    app.add_systems(
         PostUpdate,
-        (handle_chunk_rebuilds, update_chunk_visibility)
-            .chain()
-           // .in_set(FoliageChunkSystemSet)
-           // .before(FoliageLayerSystemSet),
+        (handle_chunk_rebuilds, update_chunk_visibility).chain(), // .in_set(FoliageChunkSystemSet)
+                                                                  // .before(FoliageLayerSystemSet),
     );
 }
 
@@ -142,6 +142,9 @@ fn handle_chunk_rebuilds(
             continue;
         };
 
+         let mut rng = rand::thread_rng();
+
+
         let foliage_config = &foliage_config_resource.0;
         let height_scale = foliage_config.height_scale;
 
@@ -153,7 +156,7 @@ fn handle_chunk_rebuilds(
             .get(noise_texture_handle)
             .expect("no noise texture");
 
-       //   info!("rebuild foliage chunk");
+        //   info!("rebuild foliage chunk");
 
         for x in 0..chunk_dimensions.x {
             for y in 0..chunk_dimensions.y {
@@ -183,27 +186,40 @@ fn handle_chunk_rebuilds(
                     continue;
                 }
 
+
+
+                // Generate a random floating-point number between 0.0 and 1.0
+                let random_float_x: f32 = rng.gen::<f32>() - 0.5;
+                let random_float_y: f32 = rng.gen::<f32>() - 0.5; // for rotation in radians 
+                let random_float_z: f32 = rng.gen::<f32>() - 0.5;
+
+
+
+                let foliage_offset = Vec3::new( noise_sample_scaled , 0.0,  1.0 - noise_sample_scaled ) * 2.0 ;
+                // info!("offset {}", foliage_offset);
                 // info!("chunk_density_at_point {:?}", chunk_density_at_point);
 
                 //combine with noise here ,  then spawn foliage    proto
 
                 let foliage_proto_translation = Vec3::new(
-                    x as f32,
+                    x as f32 + foliage_offset.x + random_float_x,
                     chunk_base_height_at_point as f32 * height_scale,
-                    y as f32,
+                    y as f32 + foliage_offset.z + random_float_z,
                 );
 
-                commands
-                    .spawn( (
 
-                        Transform::from_translation(foliage_proto_translation),
+                let custom_rotation = Quat::from_rotation_y( 
+                 noise_sample_scaled * std::f32::consts::PI   //noise based rotation 
+                 + (  random_float_y )  // rotation based on the layer to prevent z-fighting 
+                   );
+
+                commands
+                    .spawn((
+                        Transform::from_translation(foliage_proto_translation).with_rotation( custom_rotation ),
                         FoliageProtoBundle::new(foliage_type_definition.clone()),
                         Name::new("foliage_proto"),
-                        Visibility::default()
-
-
-                        )  )
-                    
+                        Visibility::default(),
+                    ))
                     .set_parent(chunk_entity);
             }
         }

@@ -1,4 +1,4 @@
 use bevy::prelude::*;
 
-#[derive(Component,Default)]
+#[derive(Component, Default)]
 pub struct FoliageViewer;

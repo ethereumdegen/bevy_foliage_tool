@@ -10,23 +10,18 @@ use crate::{foliage_assets::FoliageAssetsResource, foliage_types::FoliageDefinit
 pub(crate) fn foliage_proto_plugin(app: &mut App) {
     app.add_systems(
         Update,
-        (
-            attach_mesh_to_protos, 
-            attach_material_to_protos
-            )
+        (attach_mesh_to_protos, attach_material_to_protos)
             .chain()
             .run_if(in_state(FoliageAssetsState::Loaded))
             .after(FoliageChunkSystemSet),
     );
 }
 
-
-
 #[derive(Component, Debug, Clone)]
 pub struct FoliageProto {
     pub foliage_definition: FoliageDefinition,
 }
- 
+
 //TODO replace me with required components
 #[derive(Bundle)]
 pub struct FoliageProtoBundle {
@@ -47,7 +42,7 @@ impl FoliageProtoBundle {
 
 fn attach_mesh_to_protos(
     mut commands: Commands,
-    proto_query: Query<(Entity, &FoliageProto), Added< FoliageProto >>,
+    proto_query: Query<(Entity, &FoliageProto), Added<FoliageProto>>,
 
     foliage_assets_resource: Res<FoliageAssetsResource>,
 ) {
@@ -70,7 +65,7 @@ fn attach_mesh_to_protos(
 
 fn attach_material_to_protos(
     mut commands: Commands,
-    proto_query: Query<(Entity, &FoliageProto),  Added<FoliageProto >   >,
+    proto_query: Query<(Entity, &FoliageProto), Added<FoliageProto>>,
 
     foliage_assets_resource: Res<FoliageAssetsResource>,
 ) {
@@ -87,12 +82,14 @@ fn attach_material_to_protos(
             if let Some(material_handle) = material_handle {
                 match material_handle {
                     FoliageMaterialHandle::Standard(mat_handle) => {
-                        commands.entity(proto_entity) 
-                        .try_insert(MeshMaterial3d( mat_handle.clone()));
+                        commands
+                            .entity(proto_entity)
+                            .try_insert(MeshMaterial3d(mat_handle.clone()));
                     }
                     FoliageMaterialHandle::Extended(mat_handle) => {
-                        commands.entity(proto_entity) 
-                        .try_insert(MeshMaterial3d(mat_handle.clone()));
+                        commands
+                            .entity(proto_entity)
+                            .try_insert(MeshMaterial3d(mat_handle.clone()));
                     }
                 }
             }

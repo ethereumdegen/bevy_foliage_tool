@@ -165,15 +165,12 @@ fn unpack_foliage_layer_data_components(
                 );
 
                 let _new_chunk = commands
-                    .spawn( (
-                         Transform::from_translation(chunk_translation) ,
-                             Visibility::default(),
-                             FoliageChunk { chunk_offset },
-                             Name::new("foliage_chunk")
-                         )
-                        
-                    )
-                    
+                    .spawn((
+                        Transform::from_translation(chunk_translation),
+                        Visibility::default(),
+                        FoliageChunk { chunk_offset },
+                        Name::new("foliage_chunk"),
+                    ))
                     .set_parent(foliage_layer_entity)
                     .id();
             }
