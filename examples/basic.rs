@@ -114,10 +114,15 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let foliage_scenes_folder_path = "assets/foliage/foliage_scenes/";
 
+    let foliage_scene_data = FoliageSceneData::create_or_load(foliage_scenes_folder_path, foliage_scene_name);
+
+   //  foliage_scene_data.save_to_disk(foliage_scenes_folder_path );
+
+
     commands
         .spawn(Transform::default())
         .insert(
-            FoliageSceneData::create_or_load(foliage_scenes_folder_path, foliage_scene_name), //this will be unpacked automagically
+            foliage_scene_data, //this will be unpacked automagically
         )
         .insert(Name::new(foliage_scene_name.clone()));
 

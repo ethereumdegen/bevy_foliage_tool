@@ -1,3 +1,4 @@
+use crate::foliage_layer::FoliageBaseNormalMapU16;
 use crate::foliage_layer::FoliageBaseHeightMapU16;
 use crate::foliage_layer::FoliageLayerData;
 use crate::foliage_scene::FoliageScene;
@@ -109,6 +110,7 @@ pub fn apply_command_events(
         &FoliageLayer,
         &FoliageDensityMapU8,
         Option<&FoliageBaseHeightMapU16>,
+         Option<&FoliageBaseNormalMapU16>,
     )>, //chunks parent should have terrain data
 
     foliage_config_resource: Res<FoliageConfigResource>,
@@ -136,7 +138,7 @@ pub fn apply_command_events(
                     let foliage_layer_entities_map = &foliage_scene.foliage_layer_entities_map;
 
                     for (layer_index, layer_entity) in foliage_layer_entities_map.iter() {
-                        if let Some((foliage_layer, density_data, height_data)) =
+                        if let Some((foliage_layer, density_data, height_data,normal_data)) =
                             foliage_layer_query.get(*layer_entity).ok()
                         {
                             layers_data_map.insert(
@@ -146,6 +148,7 @@ pub fn apply_command_events(
                                     foliage_index: *layer_index,
                                     density_map: density_data.clone(),
                                     base_height_map: height_data.cloned(),
+                                    base_normal_map: normal_data.cloned(),
                                 },
                             );
 

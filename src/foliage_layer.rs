@@ -59,6 +59,18 @@ impl FoliageDensityMapU8 {
     }
 }
 
+
+#[derive(Component, Debug, Clone, Serialize, Deserialize)]
+pub struct FoliageBaseNormalMapU16(pub Vec<Vec<u16>>);  // 4 for X, 4 for Z
+
+impl FoliageBaseNormalMapU16 {
+    pub fn new(dimensions: IVec2) -> Self {
+        let (width, height) = (dimensions.x as usize, dimensions.y as usize);
+        let map = vec![vec![0u16; width]; height];
+        Self(map)
+    }
+}
+
 /*
 
     Density data is 1024 x 1024
@@ -77,6 +89,7 @@ pub struct FoliageLayerData {
 
     pub density_map: FoliageDensityMapU8,
     pub base_height_map: Option<FoliageBaseHeightMapU16>,
+    pub base_normal_map: Option<FoliageBaseNormalMapU16> 
 }
 
 impl FoliageLayerData {
@@ -86,6 +99,7 @@ impl FoliageLayerData {
             //	dimensions: boundary_dimensions.clone(),
             density_map: FoliageDensityMapU8::new(boundary_dimensions),
             base_height_map: None, //FoliageBaseHeightMapU8::new( boundary_dimensions )
+            base_normal_map: None, 
         }
     }
 }
@@ -103,6 +117,7 @@ fn unpack_foliage_layer_data_components(
     for (foliage_layer_entity, foliage_layer_data) in foliage_layer_data_query.iter() {
         let density_map_data = &foliage_layer_data.density_map;
         let base_height_map_data = &foliage_layer_data.base_height_map;
+        let base_normal_map_data = &foliage_layer_data.base_normal_map;
         let foliage_index = &foliage_layer_data.foliage_index;
 
         let foliage_config = &foliage_config_resource.0;
@@ -145,6 +160,10 @@ fn unpack_foliage_layer_data_components(
             foliage_layer_cmd.insert(base_height_map_data.clone());
         }
 
+         if let Some(base_normal_map_data) = base_normal_map_data {
+            foliage_layer_cmd.insert(base_normal_map_data.clone());
+        }
+
         //spawn foliage chunks ?
 
         for x in 0..chunk_rows {
@@ -185,7 +204,8 @@ fn handle_foliage_layer_rebuild(
             Entity,
             &FoliageLayer,
             &FoliageDensityMapU8,
-            &FoliageBaseHeightMapU16,
+           // &FoliageBaseHeightMapU16,
+          //  &FoliageBaseNormalMapU8,
             &Children,
         ),
         Added<FoliageLayerNeedsRebuild>,
@@ -193,7 +213,7 @@ fn handle_foliage_layer_rebuild(
 
     foliage_chunk_query: Query<&FoliageChunk>,
 ) {
-    for (foliage_layer_entity, _foliage_layer, _density_comp, _base_height_comp, children) in
+    for (foliage_layer_entity, _foliage_layer, _density_comp, /*_base_height_comp, _base_normal_comp, */ children) in
         foliage_layer_query.iter()
     {
         if let Some(mut cmd) = commands.get_entity(foliage_layer_entity) {

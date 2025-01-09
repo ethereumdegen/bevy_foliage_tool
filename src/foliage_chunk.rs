@@ -1,3 +1,4 @@
+use crate::foliage_layer::FoliageBaseNormalMapU16;
 use crate::foliage_config::FoliageConfigResource;
 use crate::foliage_layer::FoliageBaseHeightMapU16;
 use crate::foliage_layer::FoliageDensityMapU8;
@@ -17,7 +18,14 @@ use bevy::prelude::*;
 pub(crate) fn foliage_chunks_plugin(app: &mut App) {
     app.add_systems(
         PostUpdate,
-        (handle_chunk_rebuilds, update_chunk_visibility).chain(), // .in_set(FoliageChunkSystemSet)
+        (
+
+        compute_normals_from_height, 
+        handle_chunk_rebuilds,
+         update_chunk_visibility
+
+
+         ).chain(), // .in_set(FoliageChunkSystemSet)
                                                                   // .before(FoliageLayerSystemSet),
     );
 }
@@ -86,7 +94,8 @@ fn handle_chunk_rebuilds(
     foliage_layer_query: Query<(
         &FoliageLayer,
         &FoliageDensityMapU8,
-        &FoliageBaseHeightMapU16,
+        Option<&FoliageBaseHeightMapU16>,
+        Option<&FoliageBaseNormalMapU16>,
     )>, //chunks parent should have terrain data
 
     foliage_types_resource: Res<FoliageTypesResource>,
@@ -99,7 +108,7 @@ fn handle_chunk_rebuilds(
     for (chunk_entity, foliage_chunk, parent) in chunks_query.iter() {
         let parent_entity = parent.get();
 
-        let Some((foliage_layer, foliage_density_map_comp, foliage_base_height_comp)) =
+        let Some((foliage_layer, foliage_density_map_comp, foliage_base_height_comp, foliage_base_normal_comp )) =
             foliage_layer_query.get(parent_entity).ok()
         else {
             continue;
@@ -111,7 +120,8 @@ fn handle_chunk_rebuilds(
         }
 
         let density_map = &foliage_density_map_comp.0;
-        let base_height_map = &foliage_base_height_comp.0;
+        let base_height_map =  foliage_base_height_comp.map(|c| c.0 .as_ref() );
+        let base_normal_map =  foliage_base_normal_comp.map(|c| c.0 .as_ref() );
 
         let boundary_dimensions = &foliage_layer.dimensions;
         let chunk_rows = &foliage_layer.chunk_rows;
@@ -165,8 +175,9 @@ fn handle_chunk_rebuilds(
 
                 let chunk_density_at_point =
                     density_map[data_y_index as usize][data_x_index as usize];
-                let chunk_base_height_at_point =
-                    base_height_map[data_y_index as usize][data_x_index as usize];
+                let chunk_base_height_at_point = base_height_map.as_ref().map( |m: &&Vec<Vec<u16>>| m[data_y_index as usize][data_x_index as usize] ).unwrap_or( 0 );
+           
+                let chunk_base_normal_at_point:u16 = base_normal_map.as_ref().map( |m: &&Vec<Vec<u16>> | m[data_y_index as usize][data_x_index as usize] ).unwrap_or( 0 );
 
                 if chunk_density_at_point <= 0 {
                     continue;
@@ -208,14 +219,28 @@ fn handle_chunk_rebuilds(
                 );
 
 
-                let custom_rotation = Quat::from_rotation_y( 
+
+
+                // add X and Z rotation from chunk_base_normal_at_point 
+                let  decoded_normal = decode_normal( chunk_base_normal_at_point );
+
+               //  let normal_x_rotation = Quat::from_rotation_x( decoded_normal.x ) ;
+               // let normal_z_rotation = Quat::from_rotation_z( decoded_normal.y ) ;
+                let normal_rotation = Quat::from_rotation_arc(Vec3::Y, decoded_normal);
+
+
+                let custom_y_rotation = Quat::from_rotation_y( 
                  noise_sample_scaled * std::f32::consts::PI   //noise based rotation 
-                 + (  random_float_y )  // rotation based on the layer to prevent z-fighting 
+                 +   random_float_y    // rotation based on the layer to prevent z-fighting 
                    );
+
+
+                let final_rotation = normal_rotation * custom_y_rotation;
+
 
                 commands
                     .spawn((
-                        Transform::from_translation(foliage_proto_translation).with_rotation( custom_rotation ),
+                        Transform::from_translation(foliage_proto_translation).with_rotation( final_rotation ),
                         FoliageProtoBundle::new(foliage_type_definition.clone()),
                         Name::new("foliage_proto"),
                         Visibility::default(),
@@ -224,4 +249,85 @@ fn handle_chunk_rebuilds(
             }
         }
     }
+}
+
+
+
+fn decode_normal(encoded_normal: u16) -> Vec3 {
+
+     if encoded_normal == 0 {
+        // Special case for a flat surface / missing data 
+        return Vec3::Y;
+    }
+
+
+    let x = ((encoded_normal >> 8) & 0xFF) as f32 / 255.0 * 2.0 - 1.0; // Extract high 8 bits for x and scale to [-1, 1]
+    let z = (encoded_normal & 0xFF) as f32 / 255.0 * 2.0 - 1.0;         // Extract low 8 bits for z and scale to [-1, 1]
+    
+    Vec3::new(x, 1.0, z).normalize()
+}
+
+
+
+// put this in a thread pattern ?  kinda cpu intensive
+fn compute_normals_from_height(
+
+    mut commands: Commands, 
+
+      foliage_layer_query: Query<(
+       // &mut FoliageBaseNormalMapU16,
+       Entity,  &FoliageBaseHeightMapU16,
+    ), (Changed<FoliageBaseHeightMapU16> , Without<FoliageBaseNormalMapU16> ) >,
+
+
+) {
+    for ( chunk_entity,  height_map) in foliage_layer_query.iter () {
+        let height_data = &height_map.0;
+        let height = height_data.len();
+        let width = height_data[0].len();
+
+        let mut normals = vec![vec![0u16; width]; height];
+
+        for y in 1..(height - 1) {
+            for x in 1..(width - 1) {
+                let height_left = height_data[y][x - 1] as f32;
+                let height_right = height_data[y][x + 1] as f32;
+                let height_up = height_data[y - 1][x] as f32;
+                let height_down = height_data[y + 1][x] as f32;
+
+                // Compute slope in X and Z directions
+                let slope_x = (height_right - height_left) / 2.0;
+                let slope_z = (height_down - height_up) / 2.0;
+
+                // Calculate the normal
+                let normal = Vec3::new(-slope_x, 1.0, -slope_z).normalize();
+
+                // Encode the normal into a u16 format
+                let encoded_normal = encode_normal(normal);
+
+                normals[y][x] = encoded_normal;
+            }
+        }
+
+     
+
+        if let Some(mut cmd) = commands.get_entity(chunk_entity){
+              info!("built  normal map ");
+            cmd.insert((
+
+                FoliageBaseNormalMapU16 ( normals ),
+
+                FoliageChunkNeedsRebuild 
+
+                ));
+        }
+    }
+}
+
+fn encode_normal(normal: Vec3) -> u16 {
+    // Convert a normal vector to an encoded u16 representation
+    let x = ((normal.x.clamp(-1.0, 1.0) + 1.0) / 2.0 * 255.0).round() as u16;
+    let z = ((normal.z.clamp(-1.0, 1.0) + 1.0) / 2.0 * 255.0).round() as u16;
+
+    (x << 8) | z
 }
