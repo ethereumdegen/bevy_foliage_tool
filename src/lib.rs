@@ -20,6 +20,8 @@ pub mod foliage_types;
 pub mod foliage_assets;
 pub mod foliage_proto;
 
+pub mod foliage_registration;
+
 pub mod foliage_material;
 pub mod foliage_viewer;
 pub mod noise;
@@ -62,6 +64,9 @@ impl Plugin for BevyFoliageProtoPlugin {
 pub struct BevyFoliageMaterialPlugin;
 impl Plugin for BevyFoliageMaterialPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(foliage_material::foliage_material_plugin);
+        app
+          .add_plugins(foliage_material::foliage_material_plugin)
+          .add_plugins(foliage_registration::foliage_registration_plugin);
+          
     }
 }

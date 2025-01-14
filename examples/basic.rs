@@ -36,65 +36,11 @@ fn main() {
         .add_systems(Update, update_camera_look)
         .add_systems(Update, update_camera_move)
         .add_systems(Update, update_directional_light_position)
-        .add_systems(Startup, register_foliage_assets)
+       
         .add_systems(Update, add_height_maps_to_foliage_layers)
         .run();
 }
 
-
-// use manifest to  do this automatically in-crate 
-fn register_foliage_assets(
-    asset_server: Res<AssetServer>,
-
-    mut assets_resource: ResMut<FoliageAssetsResource>,
-
-    mut next_state: ResMut<NextState<FoliageAssetsState>>,
-) {
-
-        //get these from the manifest 
-    let base_color =  Color::srgb(0.13, 0.37, 0.11).into();
-     let base_color_texture =  asset_server.load(  "foliage/textures/shaded/sprite_0056.png"  );
-
- 
-    let foliage_material = FoliageMaterialExtension {
-        base: StandardMaterial {
-
-            base_color , // not needed ?
-             base_color_texture: Some( base_color_texture ) ,
-            //double_sided: true ,
-            cull_mode: None,
-             unlit: true,
-            double_sided: true,
-           // alpha_mode: AlphaMode,
-
-
-            ..default()
-        },
-
-        ..default()
-    };
-
-    let mut green_material: StandardMaterial = Color::srgb(0.13, 0.37, 0.11).into();
-    green_material.unlit = true;
-    green_material.double_sided = true;
-
-    //ideally, normals will point UP
-
-    assets_resource.register_foliage_mesh("grass1", asset_server.load("foliage/meshes/grass4.obj"));
-
-    assets_resource.register_foliage_mesh("grass2", asset_server.load("foliage/meshes/grass2.obj"));
-
-    assets_resource.register_foliage_material(
-        "standard_green",
-        FoliageMaterialHandle::Standard(asset_server.add(green_material)),
-    );
-    assets_resource.register_foliage_material(
-        "foliage_green",
-        FoliageMaterialHandle::Extended(asset_server.add(foliage_material)),
-    );
-
-    next_state.set(FoliageAssetsState::Loaded);
-}
 
 fn add_height_maps_to_foliage_layers(
     mut commands: Commands,

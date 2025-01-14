@@ -55,6 +55,7 @@ pub struct FoliageMaterial {
 
     */
 }
+ 
 
 impl MaterialExtension for FoliageMaterial {
     fn fragment_shader() -> ShaderRef {

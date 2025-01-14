@@ -22,6 +22,8 @@ pub struct FoliageAssetsResource {
     pub foliage_mesh_handles: HashMap<String, Handle<Mesh>>,
     //pub foliage_material_handles: HashMap<String, Handle<StandardMaterial>>,
     pub foliage_material_handles: HashMap<String, FoliageMaterialHandle>,
+
+   
 }
 
 impl FoliageAssetsResource {
