@@ -53,19 +53,19 @@ fn register_foliage_assets(
 
         //get these from the manifest 
     let base_color =  Color::srgb(0.13, 0.37, 0.11).into();
-     //let base_color_texture =  asset_server.load(  "foliage/textures/flat/sprite_0017.png"  );
+     let base_color_texture =  asset_server.load(  "foliage/textures/shaded/sprite_0056.png"  );
 
-
+ 
     let foliage_material = FoliageMaterialExtension {
         base: StandardMaterial {
 
             base_color , // not needed ?
-           //  base_color_texture: Some( base_color_texture ) ,
+             base_color_texture: Some( base_color_texture ) ,
             //double_sided: true ,
             cull_mode: None,
-           // unlit: true,
+             unlit: true,
             double_sided: true,
-            alpha_mode: AlphaMode::Blend,
+           // alpha_mode: AlphaMode,
 
 
             ..default()
@@ -77,6 +77,7 @@ fn register_foliage_assets(
     let mut green_material: StandardMaterial = Color::srgb(0.13, 0.37, 0.11).into();
     green_material.unlit = true;
     green_material.double_sided = true;
+
     //ideally, normals will point UP
 
     assets_resource.register_foliage_mesh("grass1", asset_server.load("foliage/meshes/grass4.obj"));
