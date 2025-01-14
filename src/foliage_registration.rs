@@ -58,7 +58,8 @@ fn register_foliage_assets(
             cull_mode: None,
              unlit: true,
             double_sided: true,
-           // alpha_mode: AlphaMode,
+           // depth_bias
+            alpha_mode: AlphaMode::Blend, //dont write depth ? 
 
 
             ..default()

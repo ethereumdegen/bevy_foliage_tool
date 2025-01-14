@@ -114,6 +114,23 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     var out: VertexOutput;
 
 
+
+
+    let time_base =  1.0  ;
+
+    let sinewave_time = sin(  time_base  );
+
+    var local_psn_output = vertex.position;
+
+    local_psn_output.y = vertex.position.y * (1.0 + sin(  time_base +  vertex.position.x) *  0.20); 
+    local_psn_output.x = vertex.position.x * (1.0 + cos(  time_base +  vertex.position.y) *  0.10 * vertex.position.y); 
+
+    out.position = mesh_position_local_to_clip(
+        get_world_from_local(vertex.instance_index),
+        vec4<f32>(local_psn_output, 1.0),
+    );
+
+
     return out;
 }
 

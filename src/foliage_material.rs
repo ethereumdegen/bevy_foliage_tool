@@ -59,7 +59,7 @@ impl MaterialExtension for FoliageMaterial {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
     } 
 
-    fn prepass_fragment_shader() -> ShaderRef {
+     fn prepass_fragment_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
     } 
 }
