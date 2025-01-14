@@ -9,7 +9,7 @@
 #import bevy_pbr::mesh_functions::{mesh_position_local_to_clip, get_world_from_local}
  
  #import bevy_pbr::{
-    forward_io::{   FragmentOutput},
+    
       mesh_view_bindings::view,
         mesh_view_bindings::globals,
          
@@ -18,8 +18,7 @@
         pbr_functions, 
 
     pbr_fragment::pbr_input_from_standard_material,
-      pbr_functions::{alpha_discard, apply_pbr_lighting, 
-      main_pass_post_lighting_processing,
+      pbr_functions::{ 
       prepare_world_normal,
       apply_normal_mapping,
       calculate_view
@@ -28,6 +27,23 @@
     // we can optionally modify the lit color before post-processing is applied
     pbr_types::{STANDARD_MATERIAL_FLAGS_DOUBLE_SIDED_BIT,STANDARD_MATERIAL_FLAGS_UNLIT_BIT},
 }
+
+
+
+
+#ifdef PREPASS_PIPELINE
+#import bevy_pbr::{
+    prepass_io::{ VertexOutput, FragmentOutput},
+    pbr_deferred_functions::deferred_output,
+}
+#else
+#import bevy_pbr::{
+    forward_io::{ FragmentOutput},
+    pbr_functions::{apply_pbr_lighting, main_pass_post_lighting_processing, alpha_discard},
+}
+#endif
+
+
 
 
 
@@ -49,7 +65,7 @@
 //var base_color:  vec4<f32>;
 
 
-@group(1) @binding(0) var<uniform> base_material: StandardMaterial;
+// @group(1) @binding(0) var<uniform> base_material: StandardMaterial;
  
 
  
@@ -74,6 +90,40 @@
  
 
 
+  
+
+
+
+
+
+#ifdef PREPASS_PIPELINE
+
+
+
+
+struct Vertex {
+    @builtin(instance_index) instance_index: u32,
+    @location(0) position: vec3<f32>,
+    @location(1) blend_color: vec4<f32>,
+  
+};
+
+
+@vertex
+fn vertex(vertex: Vertex) -> VertexOutput {
+    var out: VertexOutput;
+
+
+    return out;
+}
+
+
+
+#else
+
+
+
+
 
 struct Vertex {
     @builtin(instance_index) instance_index: u32,
@@ -82,7 +132,7 @@ struct Vertex {
     @location(2) uv: vec2<f32>,
 };
 
- 
+
 
 // could use the default  and toggle IFDEF ? 
 struct VertexOutput {
@@ -95,13 +145,14 @@ struct VertexOutput {
     @location(5) color: vec4<f32>, 
 }
 
- 
 
 
-// this is destroying my UVs ! 
 @vertex
 fn vertex(vertex: Vertex) -> VertexOutput {
     var out: VertexOutput;
+
+
+
 
     let time_base =  ( globals.time  ) * 1.0  ;
 
@@ -117,8 +168,13 @@ fn vertex(vertex: Vertex) -> VertexOutput {
         vec4<f32>(local_psn_output, 1.0),
     );
 
-    //define vertex color based on height 
+
+
+  
+        //define vertex color based on height  but not in prepass! 
+
     out.color =  mix( vec4<f32>(0.6,0.6,0.6,1.0),  vec4<f32>(1.0,1.0,1.0,1.0) , local_psn_output.y  ) ;
+   
    
     //out.position = vertex.position;
     out.uv = vertex.uv ; 
@@ -126,6 +182,8 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     return out;
 }
 
+
+#endif
 
 
 
@@ -139,9 +197,13 @@ fn fragment(
 ) -> @location(0) vec4<f32> {
 
     
-    //let vertex_color = mix( vec4<f32>(0.6,0.6,0.6,1.0),  vec4<f32>(1.0,1.0,1.0,1.0) , in.position.y  ); 
 
+    #ifdef PREPASS_PIPELINE
+    let vertex_color = vec4<f32>(1.0,1.0,1.0,1.0);
+    return  vertex_color;
+    #else
     let vertex_color = in.color;
+     
 
 
     let uv_transform = pbr_bindings::material.uv_transform; 
@@ -172,6 +234,9 @@ fn fragment(
      }
     
     return  color;
+
+
+    #endif
 }
 
  

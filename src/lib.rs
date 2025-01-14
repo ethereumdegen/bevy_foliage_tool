@@ -40,13 +40,20 @@ impl Plugin for BevyFoliageToolPlugin {
 
         app.insert_resource(FoliageConfigResource(foliage_config))
             .insert_resource(FoliageTypesResource(foliage_types_manifest))
+
+              .add_plugins(foliage_assets::foliage_assets_plugin)
+              
             // .add_plugins(foliage_loading_state::foliage_loading_state_plugin)
             // .add_plugins(foliage::foliage_plugin)
             .add_plugins(foliage_chunk::foliage_chunks_plugin)
             .add_plugins(noise::noise_plugin)
             .add_plugins(foliage_scene::foliage_scene_plugin)
             .add_plugins(foliage_layer::foliage_layer_plugin)
-            .add_plugins(bevy_foliage_edits_plugin);
+            .add_plugins(bevy_foliage_edits_plugin)
+
+           
+
+             ;
     }
 }
 
@@ -56,7 +63,7 @@ impl Plugin for BevyFoliageProtoPlugin {
     fn build(&self, app: &mut App) {
         app
             //  .insert_resource( self.foliage_assets_resource.clone() )
-            .add_plugins(foliage_assets::foliage_assets_plugin)
+           
             .add_plugins(foliage_proto::foliage_proto_plugin);
     }
 }

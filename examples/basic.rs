@@ -1,3 +1,4 @@
+use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::MouseMotion;
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
@@ -109,7 +110,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // camera
     commands
         .spawn( (
-
+               DepthPrepass,
                 Camera3d::default() ,
                     Transform::from_xyz(30.0, 152.5, 30.0)
                 .looking_at(Vec3::new(900.0, 0.0, 900.0), Vec3::Y),
