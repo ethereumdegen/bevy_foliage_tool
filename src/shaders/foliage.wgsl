@@ -33,7 +33,7 @@
 
 #ifdef PREPASS_PIPELINE
 #import bevy_pbr::{
-    prepass_io::{ VertexOutput, FragmentOutput},
+    prepass_io::{  FragmentOutput},
     pbr_deferred_functions::deferred_output,
 }
 #else
@@ -110,8 +110,9 @@ struct Vertex {
 
 
 @vertex
-fn vertex(vertex: Vertex) -> VertexOutput {
-    var out: VertexOutput;
+fn vertex(vertex: Vertex) -> bevy_pbr::prepass_io::VertexOutput {
+
+    var out: bevy_pbr::prepass_io::VertexOutput;
 
 
 
@@ -206,56 +207,71 @@ fn vertex(vertex: Vertex) -> VertexOutput {
 
 
 
-@fragment
-fn fragment(
-     
-     in: VertexOutput,
-         @builtin(front_facing) is_front: bool,
-) -> @location(0) vec4<f32> {
 
-    
-
-    #ifdef PREPASS_PIPELINE
-    let vertex_color = vec4<f32>(1.0,1.0,1.0,1.0);
-    return  vertex_color;
-    #else
-    let vertex_color = in.color;
-     
-
-
-    let uv_transform = pbr_bindings::material.uv_transform; 
-    var uv = (uv_transform * vec3(in.uv, 1.0)).xy;
- 
-    
-
-      var bias  = view.mip_bias;
- 
-        // this is how you access std material stuff in an ext when using a vertex pass ! 
-     var color = pbr_bindings::material.base_color;
-
+#ifdef PREPASS_PIPELINE
+     @fragment
+    fn  fragment(
+     in: bevy_pbr::prepass_io::VertexOutput,
       
-      let tex_color  = textureSample(
-            pbr_bindings::base_color_texture,
-            pbr_bindings::base_color_sampler,
-            uv,
-             
-        );
-  
+    ) -> @location(0) vec4<f32> {
 
-    color  *= tex_color ; 
-    color  *= vertex_color; 
-     
-    //manual alpha mask 
-     if  ( color.a < 0.2 ) {
-      discard;
-     }
+       bevy_pbr::pbr_prepass_functions::prepass_alpha_discard(in);
     
-    return  color;
+
+         var out: vec4<f32>;
+
+         return out ; 
+     }
+
+#else 
 
 
-    #endif
-}
+    @fragment
+    fn fragment(
+         
+         in: VertexOutput,
+             @builtin(front_facing) is_front: bool,
+    ) -> @location(0) vec4<f32> {
+
+        
+     
+        let vertex_color = in.color;
+         
+
+
+        let uv_transform = pbr_bindings::material.uv_transform; 
+        var uv = (uv_transform * vec3(in.uv, 1.0)).xy;
+     
+        
+
+          var bias  = view.mip_bias;
+     
+            // this is how you access std material stuff in an ext when using a vertex pass ! 
+         var color = pbr_bindings::material.base_color;
+
+          
+          let tex_color  = textureSample(
+                pbr_bindings::base_color_texture,
+                pbr_bindings::base_color_sampler,
+                uv,
+                 
+            );
+      
+
+        color  *= tex_color ; 
+        color  *= vertex_color; 
+         
+        //manual alpha mask 
+         if  ( color.a < 0.2 ) {
+          discard;
+         }
+        
+        return  color;
+
+
+       
+    }
 
  
 
- 
+ #endif
