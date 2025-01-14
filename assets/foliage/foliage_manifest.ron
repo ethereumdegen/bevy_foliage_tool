@@ -5,9 +5,11 @@
         (
             name: "Grass",
 
-            mesh_name: Some("grass2"),
+            mesh_name: Some("grass1"),
 
-            material_name: Some("foliage_green")
+            material_name: Some("foliage_green"),
+
+
             
            
         ),
@@ -15,5 +17,20 @@
         
 
 
-	]
+	],
+
+
+    //uses the special foliage shader that supports wind 
+    foliage_material_definitions: {
+
+
+        "foliage_green" :  (
+            base_color: Some( LinearRgba( red: 0.13, green: 0.37, blue: 0.11, alpha: 1.0 )  ),
+            base_color_texture: Some("foliage/textures/flat/sprint_0017.png"),
+
+
+        )
+
+
+    }
 )

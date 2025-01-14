@@ -41,6 +41,8 @@ fn main() {
         .run();
 }
 
+
+// use manifest to  do this automatically in-crate 
 fn register_foliage_assets(
     asset_server: Res<AssetServer>,
 
@@ -48,11 +50,24 @@ fn register_foliage_assets(
 
     mut next_state: ResMut<NextState<FoliageAssetsState>>,
 ) {
+
+        //get these from the manifest 
+    let base_color =  Color::srgb(0.13, 0.37, 0.11).into();
+     let base_color_texture =  asset_server.load(  "foliage/textures/flat/sprite_0017.png"  );
+
+
     let foliage_material = FoliageMaterialExtension {
         base: StandardMaterial {
-            base_color: Color::srgb(0.13, 0.37, 0.11).into(), // not needed ?
+
+            base_color , // not needed ?
+             base_color_texture: Some( base_color_texture ) ,
             //double_sided: true ,
             cull_mode: None,
+            unlit: true,
+            double_sided: true,
+            alpha_mode: AlphaMode::Blend,
+
+
             ..default()
         },
 
@@ -64,7 +79,7 @@ fn register_foliage_assets(
     green_material.double_sided = true;
     //ideally, normals will point UP
 
-    assets_resource.register_foliage_mesh("grass1", asset_server.load("foliage/meshes/grass1.obj"));
+    assets_resource.register_foliage_mesh("grass1", asset_server.load("foliage/meshes/grass4.obj"));
 
     assets_resource.register_foliage_mesh("grass2", asset_server.load("foliage/meshes/grass2.obj"));
 
@@ -110,7 +125,7 @@ fn add_height_maps_to_foliage_layers(
 
 /// set up a simple 3D scene
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let foliage_scene_name = "raven_woods_foliage.foliage";
+    let foliage_scene_name = "world_foliage.foliage";
 
     let foliage_scenes_folder_path = "assets/foliage/foliage_scenes/";
 
@@ -127,17 +142,16 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Name::new(foliage_scene_name.clone()));
 
     // light
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
+    commands.spawn( ( DirectionalLight {
             //shadow_depth_bias: 0.5,
             //shadow_normal_bias: 0.5,
             color: Color::WHITE,
 
             ..default()
         },
-        transform: Transform::from_xyz(4.0, 6.0, 4.0),
-        ..default()
-    });
+          Transform::from_xyz(4.0, 6.0, 4.0),
+     
+    ));
     // light
 
     commands.insert_resource(AmbientLight {
@@ -147,17 +161,20 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     // camera
     commands
-        .spawn(Camera3dBundle {
-            transform: Transform::from_xyz(30.0, 152.5, 30.0)
-                .looking_at(Vec3::new(900.0, 0.0, 900.0), Vec3::Y),
-            ..default()
-        })
-        .insert(FoliageViewer) // important to add this !! 
+        .spawn( (
 
+                Camera3d::default() ,
+                    Transform::from_xyz(30.0, 152.5, 30.0)
+                .looking_at(Vec3::new(900.0, 0.0, 900.0), Vec3::Y),
+                FoliageViewer // important to add this !! 
+            ));
+
+
+  
 
         //.insert(TerrainViewer::default())
        // .insert(ShadowFilteringMethod::Jimenez14)
-       ;
+        
 }
 
 fn update_camera_look(
