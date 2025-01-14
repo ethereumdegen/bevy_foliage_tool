@@ -117,7 +117,11 @@ fn fragment(
          @builtin(front_facing) is_front: bool,
 ) -> @location(0) vec4<f32> {
 
-    let uv = in.uv;
+    
+ 
+    let uv_transform = pbr_bindings::material.uv_transform; 
+    var uv = (uv_transform * vec3(in.uv, 1.0)).xy;
+ 
     
 
       var bias  = view.mip_bias;
@@ -134,8 +138,8 @@ fn fragment(
         );
     }
 
-    color.r = 1.0;
-    color.a = 1.0;
+    //color.r = 1.0;
+    //color.a = 1.0;
     
     return  color;
 }
