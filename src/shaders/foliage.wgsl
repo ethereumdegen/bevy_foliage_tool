@@ -14,9 +14,12 @@
         mesh_view_bindings::globals,
          
       pbr_bindings,
-    
+      pbr_types,
+        pbr_functions, 
+
     pbr_fragment::pbr_input_from_standard_material,
-      pbr_functions::{alpha_discard,calculate_tbn_mikktspace,apply_pbr_lighting, main_pass_post_lighting_processing,
+      pbr_functions::{alpha_discard, apply_pbr_lighting, 
+      main_pass_post_lighting_processing,
       prepare_world_normal,
       apply_normal_mapping,
       calculate_view
@@ -46,7 +49,7 @@
 //var base_color:  vec4<f32>;
 
 
-//@group(1) @binding(0) var<uniform> base_material: StandardMaterial;
+@group(1) @binding(0) var<uniform> base_material: StandardMaterial;
  
 
  
@@ -68,63 +71,7 @@
 
 // see https://github.com/bevyengine/bevy/blob/1030a99b8e2680a7e696d6433b79f5671768231c/crates/bevy_pbr/src/render/forward_io.wgsl#L32-L56
 
-
-/*
-@vertex
-fn vertex(
-         vertex: Vertex,
-         @builtin(instance_index) instance_index: u32,
  
-       //   @builtin(instance_index) instance_index: u32,
-       ) -> VertexOutput {
-    
-
-    var out: VertexOutput;
-
-    let wind_speed = 0.5;
-    var wind_strength = 0.25 ;
-
-    let wind_amount = cos(globals.time * wind_speed);
-
-    let wind: vec2<f32> = vec2f( wind_amount , wind_amount);
-    
-    //   var noise = perlin_noise_2d(vec2<f32>(vertex_no_morph.world_position.x/50.0 + globals.time * 0.5, vertex_no_morph.world_position.z/50.0 + globals.time * 0.5));
-
-
-
-  //  var position_field_offset = vec3<f32>(vertex.position.x, 0., vertex.position.z);
-    //position_field_offset = position_field_offset - vec3f(config.wind,0.);
-
-    var position =vertex.position; 
-
-   
-     // ---WIND---
-    // only applies wind if the vertex is not on the bottom of the grass (or very small)
-    let offset =  wind ;
-    let final_strength = max(0.,log(vertex.position.y + 1.))  * wind_strength;
-    position.x += offset.x * final_strength;
-    position.z += offset.y * final_strength;
-    
-    // ---CLIP_POSITION---
-  //  out.position = mesh_position_local_to_clip(get_model_matrix( instance_index ), vec4<f32>(position, 1.0));
-
-     // var model = mesh_functions::get_model_matrix(instance_index);
-
-    // out.world_position = mesh_functions::mesh_position_local_to_world(model, vec4<f32>( position , 1.0));
-   // out.position = mesh_functions::position_world_to_clip(out.world_position.xyz);
-
-   //clip psn out ! 
-      out. position = mesh_position_local_to_clip(get_world_from_local(
-         instance_index // 0u ? 
-
-
-        ), vec4<f32>(position, 1.0));
-
-    //    out.color = base_material.base_color;
-
-    return out;
-}
-*/
 
 
 
@@ -153,7 +100,7 @@ fn vertex(vertex: Vertex) -> VertexOutput {
         vec4<f32>(local_psn_output, 1.0),
     );
    
-
+   //  out.color = base_material.base_color;
    
     return out;
 }
@@ -169,18 +116,27 @@ fn fragment(
      in: VertexOutput,
          @builtin(front_facing) is_front: bool,
 ) -> @location(0) vec4<f32> {
+
+    let uv = in.uv;
     
 
-    var pbr_input = pbr_input_from_standard_material(in, is_front);
-
-
-    let uv = in.uv  ;
+      var bias  = view.mip_bias;
  
+        // this is how you access std material stuff in an ext when using a vertex pass ! 
+     var color = pbr_bindings::material.base_color;
 
-     var color =  pbr_input.material.base_color ;
+      if ((pbr_bindings::material.flags & pbr_types::STANDARD_MATERIAL_FLAGS_BASE_COLOR_TEXTURE_BIT) != 0u) {
+        color *= textureSample(
+            pbr_bindings::base_color_texture,
+            pbr_bindings::base_color_sampler,
+            uv,
+             
+        );
+    }
+
     color.r = 1.0;
     color.a = 1.0;
- 
+    
     return  color;
 }
 
