@@ -47,41 +47,14 @@
 
 
 //@group(1) @binding(0) var<uniform> base_material: StandardMaterial;
-
-
-@group(1) @binding(1)
-var base_color_texture: texture_2d<f32>;
-@group(1) @binding(2)
-var base_color_sampler: sampler;
  
-
-@group(1) @binding(3)
-var emissive_texture: texture_2d<f32>;
-@group(1) @binding(4)
-var emissive_sampler: sampler;
-
-@group(1) @binding(5)
-var metallic_roughness_texture: texture_2d<f32>;
-@group(1) @binding(6)
-var metallic_roughness_sampler: sampler;
-
-@group(1) @binding(7)
-var occlusion_texture: texture_2d<f32>;
-@group(1) @binding(8)
-var occlusion_sampler: sampler;
 
  
  
 
 //should consider adding splat painting to this ..   performs a color shift 
 
- 
-struct Vertex {
-    
-    @location(0) position: vec3<f32>,
-    //   @location(5) color: vec4<f32>,
-} 
-
+  
 
  //mod the UV using parallax 
   // https://github.com/nicopap/bevy_mod_paramap/blob/main/src/parallax_map.wgsl
@@ -93,6 +66,10 @@ struct Vertex {
 // https://bevyengine.org/examples/shaders/shader-instancing/
 
 
+// see https://github.com/bevyengine/bevy/blob/1030a99b8e2680a7e696d6433b79f5671768231c/crates/bevy_pbr/src/render/forward_io.wgsl#L32-L56
+
+
+/*
 @vertex
 fn vertex(
          vertex: Vertex,
@@ -147,47 +124,66 @@ fn vertex(
 
     return out;
 }
+*/
+
+
+
+struct Vertex {
+    @builtin(instance_index) instance_index: u32,
+    @location(0) position: vec3<f32>,
+    @location(1) blend_color: vec4<f32>,
+};
+
+
+
+@vertex
+fn vertex(vertex: Vertex) -> VertexOutput {
+    var out: VertexOutput;
+
+    let time_base =  ( globals.time  ) * 1.0  ;
+
+    let sinewave_time = sin(  time_base  );
+
+    var local_psn_output = vertex.position;
+
+    local_psn_output.y = local_psn_output.y + sin(  time_base +  local_psn_output.x) *  0.20; 
+
+    out.position = mesh_position_local_to_clip(
+        get_world_from_local(vertex.instance_index),
+        vec4<f32>(local_psn_output, 1.0),
+    );
+   
+
+   
+    return out;
+}
+
+
 
 
 
 
 @fragment
 fn fragment(
-     in: VertexOutput, 
-        
-
-     @builtin(front_facing) is_front: bool,
-
+     
+     in: VertexOutput,
+         @builtin(front_facing) is_front: bool,
 ) -> @location(0) vec4<f32> {
-
-
-    //make this more efficient ? 
-
-  
-      var pbr_input = pbr_input_from_standard_material(in, is_front);
-   
-
-      // toon shaded normals 
-      pbr_input.world_normal = vec3<f32>(0.0,1.0,0.0) ;
-
-      pbr_input.N = vec3<f32>(0.0,1.0,0.0) ;
-
-
-      var pbr_out: FragmentOutput;
- 
-       pbr_out.color = apply_pbr_lighting(pbr_input);  // slow ?
-
-
-
-      //apply pbr lighting ? 
-
-      // var pbr_out: FragmentOutput;
- 
-      var color_out =   pbr_out.color; //   pbr_input.material.base_color;   
     
-     return color_out; 
-    
+
+    var pbr_input = pbr_input_from_standard_material(in, is_front);
+
+
+    let uv = in.uv  ;
+ 
+
+     var color =  pbr_input.material.base_color ;
+    color.r = 1.0;
+    color.a = 1.0;
+ 
+    return  color;
 }
+
  
 
 

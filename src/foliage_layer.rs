@@ -150,6 +150,7 @@ fn unpack_foliage_layer_data_components(
                 chunk_rows: chunk_rows.clone(),
                 foliage_index: foliage_index.clone(),
             })
+            .insert(Visibility::default())
             .insert(density_map_data.clone())
             //.insert(base_height_map_data.clone())
             .insert(Name::new("foliage_layer"))

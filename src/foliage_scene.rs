@@ -168,9 +168,10 @@ fn unpack_foliage_scene_data_components(
                     foliage_layer_entities_map.insert(layer_index, layer_entity);
                 }
             })
-            .insert(FoliageScene {
+            .insert((FoliageScene {
                 foliage_scene_name: foliage_scene_data.foliage_scene_name.clone(),
                 foliage_layer_entities_map,
-            });
+            },
+            Visibility::default())  );
     }
 }

@@ -57,15 +57,15 @@ pub struct FoliageMaterial {
 }
 
 impl MaterialExtension for FoliageMaterial {
-   /* fn fragment_shader() -> ShaderRef {
+    fn fragment_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
     }
 
     fn deferred_fragment_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
-    }*/
+    } 
 
-    /*
+    
 
     fn vertex_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
@@ -78,5 +78,5 @@ impl MaterialExtension for FoliageMaterial {
     //important for proper depth testing
     fn prepass_vertex_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
-    }*/
+    } 
 }
