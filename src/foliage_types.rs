@@ -42,7 +42,7 @@ pub struct FoliageMaterialDefinition {
     #[serde(default)]
     pub material_preset: FoliageMaterialPreset, 
     
-    pub base_color: Option<LinearRgba>,
+    pub base_color: Option<Srgba>,
     pub base_color_texture: Option<String>, 
 
 }

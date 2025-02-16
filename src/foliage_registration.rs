@@ -44,7 +44,7 @@ fn register_foliage_assets(
 
 
 
-		let base_color = mat_def.base_color.unwrap_or( LinearRgba::WHITE ).into();
+		let base_color = mat_def.base_color.unwrap_or( Srgba::WHITE ).into();
 
 		let base_material_path = &mat_def.base_color_texture;
 
