@@ -11,6 +11,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Resource)]
 pub struct FoliageConfigResource(pub FoliageConfig);
 
+
+
+/// A foliage config describes the foliage of a level including the dimensions and paths to the foliage types manifest and density (binary file)
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FoliageConfig {
     pub boundary_dimensions: IVec2,
