@@ -1,5 +1,5 @@
  
-use crate::foliage_layer::FoliageLayerData;
+//use crate::foliage_layer::FoliageLayerData;
  
 use crate::foliage_scene::FoliageSceneData;
 /*use crate::density_map::DensityMap;
@@ -9,8 +9,8 @@ use crate::density_map::DensityMapU8;
 use crate::foliage_chunk::FoliageChunkDensityData;
 
 */
-use crate::foliage_layer::FoliageDensityMapU8;
-use crate::foliage_layer::FoliageLayer;
+//use crate::foliage_layer::FoliageDensityMapU8;
+//use crate::foliage_layer::FoliageLayer;
 use crate::FoliageConfigResource;
 use std::fs::File;
 use std::io::BufWriter;

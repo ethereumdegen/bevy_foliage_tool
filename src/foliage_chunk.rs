@@ -46,7 +46,7 @@ pub struct FoliageChunkSystemSet;
 #[derive(Component)]
 #[require( FoliageChunkLayerChildren )]
 pub struct FoliageChunk {
-    pub chunk_id: usize ,
+    pub chunk_id: u32 ,
 }
 
 
@@ -207,7 +207,7 @@ fn handle_chunk_rebuilds(
 
 
 
-   foliage_scene_query:  Query< &FoliageSceneData >,
+   foliage_scene_query:  Query< (Entity, &FoliageSceneData) >,
 
 
     foliage_types_resource: Res<FoliageTypesResource>,
@@ -244,7 +244,7 @@ fn handle_chunk_rebuilds(
       }
 
 
-    let Some(foliage_scene_data) = foliage_scene_query.get_single().ok() else {
+    let Some( ( foliage_scene_root_entity, foliage_scene_data )) = foliage_scene_query.get_single().ok() else {
 
         warn!("foliage scene data is not a singleton!? ");
 
@@ -260,30 +260,33 @@ fn handle_chunk_rebuilds(
 
               for (chunk_entity,  foliage_chunk, heightmap, dimensions ) in chunk_query.iter(){
 
+                 
+          
+
+
+                commands.spawn(
+
+                    (
+                        Name::new( format!("Foliage Chunk Layer {}", layer_index ) ),
+                        FoliageChunkLayer {
+                            chunk_id: foliage_chunk.chunk_id,
+                            layer_index: *layer_index 
+
+                        }  
+
+
+                        //insert density map !? 
+
+                    )
+
+
+                 ).set_parent(chunk_entity);
+
+
+
+
                   if let Some( mut cmd ) = commands.get_entity( chunk_entity ){
-         
-                         
-
-
-
-                        commands.spawn(
-
-                            (
-                                FoliageChunkLayer {
-                                    chunk_id: foliage_chunk.chunk_id,
-                                    layer_index: *layer_index 
-
-                                }  
-
-
-                                //insert density map !? 
-
-                            )
-
-
-                         ).set_parent(chunk_entity);
-
-
+                      cmd.set_parent( foliage_scene_root_entity ); 
 
                         
                   }

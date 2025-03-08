@@ -30,20 +30,12 @@ pub mod foliage_material;
 pub mod foliage_viewer;
 pub mod noise;
 
-pub struct BevyFoliageToolPlugin {
-    pub foliage_config_path: String,
-}
+pub struct BevyFoliageToolPlugin ;
 impl Plugin for BevyFoliageToolPlugin {
     fn build(&self, app: &mut App) {
-        let foliage_config = FoliageConfig::load_from_file(&self.foliage_config_path)
-            .expect("Could not load foliage config");
-
-        let foliage_types_manifest =
-            FoliageTypesManifest::load_from_file(&foliage_config.foliage_types_manifest_path)
-                .expect("Could not load foliage types manifest");
-
-        app.insert_resource(FoliageConfigResource(foliage_config))
-            .insert_resource(FoliageTypesResource(foliage_types_manifest))
+        
+        app //.insert_resource(FoliageConfigResource(foliage_config))
+           // .insert_resource(FoliageTypesResource(foliage_types_manifest))
 
               .add_plugins(foliage_assets::foliage_assets_plugin)
               

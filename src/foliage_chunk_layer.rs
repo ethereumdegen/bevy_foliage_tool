@@ -29,7 +29,7 @@ pub(crate) fn foliage_chunk_layer_plugin(app: &mut App) {
 #[derive(Component)] 
 pub struct FoliageChunkLayer {
 
-    pub chunk_id: usize,
+    pub chunk_id: u32,
     pub layer_index: usize, 
 
  }
