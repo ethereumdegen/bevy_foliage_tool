@@ -1,3 +1,4 @@
+use crate::foliage_density::FoliageDensityResource;
 use crate::noise::NoiseResource;
 use crate::FoliageTypesResource;
 use crate::foliage_chunk::{FoliageChunk, FoliageChunkNeedsRebuild};
@@ -17,7 +18,12 @@ pub(crate) fn foliage_chunk_layer_plugin(app: &mut App) {
             //propogate_density_updates,
             //handle_foliage_layer_rebuild,
         )
-            .chain()
+            .chain().run_if(
+
+                resource_exists::< FoliageTypesResource >
+                .and( resource_exists::<FoliageConfigResource> )
+                .and( resource_exists::<FoliageDensityResource> )
+                )
           //  .in_set(FoliageLayerSystemSet),
 
     ); 
@@ -39,10 +45,10 @@ fn build_chunk_layers (
         chunk_layer_query: Query  < ( Entity, &FoliageChunkLayer   ) , Added< FoliageChunkLayer > >,
 
 
-
+         foliage_density_resource: Res<FoliageDensityResource>,
           foliage_types_resource: Res<FoliageTypesResource>,
 
-    foliage_config_resource: Res<FoliageConfigResource>,
+        foliage_config_resource: Res<FoliageConfigResource>,
 
   //  foliage_scene_data_resource: Res<FoliageSceneData > ,  //foliage layer data !!! 
 
@@ -52,7 +58,7 @@ fn build_chunk_layers (
 ){
 
 
-
+    println!("build foliage chunk layer ! ");
 
 
 
