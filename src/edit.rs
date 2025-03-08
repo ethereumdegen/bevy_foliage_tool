@@ -1,7 +1,7 @@
  
 //use crate::foliage_layer::FoliageLayerData;
  
-use crate::foliage_scene::FoliageSceneData;
+//use crate::foliage_scene::FoliageSceneData;
 /*use crate::density_map::DensityMap;
 use crate::foliage_chunk::ChunkCoordinates;
 use crate::foliage_chunk::FoliageChunk;

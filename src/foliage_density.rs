@@ -13,11 +13,11 @@ use std::path::Path;
 use bevy::utils::HashMap;
 use serde::{Deserialize, Serialize};
 
-pub(crate) fn foliage_density_resource_plugin(app: &mut App) {
+pub(crate) fn foliage_density_plugin(app: &mut App) {
     app
       //  .init_resource::<FoliageSceneData>()
 
-     .add_systems(Update, handle_foliage_density_data_changed)
+     .add_systems(Update, handle_foliage_density_resource_changed .run_if( resource_exists_and_changed::<FoliageDensityResource> ))
 
 
    ;
@@ -47,7 +47,8 @@ pub struct FoliageScene {
  
 */
 
-
+//contains a  foliage density map for each layer 
+#[derive(Clone,Debug,Resource,Serialize,Deserialize)]
 pub struct FoliageDensityResource  ( pub  HashMap<usize,FoliageDensityMapU8 >) ; 
 
 /*{
@@ -151,13 +152,13 @@ impl FoliageDensityResource {
 
 
 
-pub struct CreateOrLoadFoliageScene {
+pub struct CreateOrLoadFoliageDensityMap {
     pub name: String,
     pub path: String, 
 
 }  //path 
 
-impl Command for CreateOrLoadFoliageScene {
+impl Command for CreateOrLoadFoliageDensityMap {
 
 
 
@@ -165,13 +166,14 @@ impl Command for CreateOrLoadFoliageScene {
         fn apply(self, world: &mut World) { 
          //  let full_file_path = format!("{}{}",  &self.path , &self.name  );
 
-            let foliage_scene_data = FoliageSceneData::create_or_load(  &self.path , &self.name ) ;
+            let foliage_density_resource = FoliageDensityResource::create_or_load(  &self.path , &self.name ) ;
  
-            
-                world.spawn( (  
+                world.insert_resource( foliage_density_resource );
+
+               /*  world.spawn( (  
                     Name::new( self.name.clone() ),
                     foliage_scene_data
-                     ) );
+                     ) ); */
              
 
 
@@ -180,24 +182,28 @@ impl Command for CreateOrLoadFoliageScene {
 
 
 
-pub struct SaveFoliageScene {
+pub struct SaveFoliageDensityMap {
 
     pub path:String 
 }  //path 
 
-impl Command for SaveFoliageScene {
+impl Command for SaveFoliageDensityMap {
 
 
 
         fn apply(self, world: &mut World) { 
 
+            let foliage_density_resource = world.get_resource::<FoliageDensityResource>();
 
-             let mut foliage_scene_query = world.query::< ( &Name, & FoliageSceneData  ) >();
+         //    let mut foliage_scene_query = world.query::< ( &Name, & FoliageSceneData  ) >();
 
-             for (name , scene_data ) in foliage_scene_query.iter(world) {
 
-                    let saved =   FoliageSceneData::save_to_disk( scene_data,  &self.path );
-             }  
+             if let Some( foliage_density_resource ) = foliage_density_resource {
+
+                foliage_density_resource.save_to_disk( &self.path ) ;
+
+             }
+             
  
         }
 
@@ -206,10 +212,12 @@ impl Command for SaveFoliageScene {
 
 
     // changes like from painting the density ! ! 
-fn handle_foliage_scene_data_changed (
+fn handle_foliage_density_resource_changed (
     mut commands: Commands,
 
-    foliage_scene_data_query: Query<(Entity, &  FoliageSceneData), Changed<FoliageSceneData>>,
+    foliage_density_resource: Res<FoliageDensityResource>,
+
+   // foliage_scene_data_query: Query<(Entity, &  FoliageSceneData), Changed<FoliageSceneData>>,
 
     foliage_chunk_query: Query< (  Entity, & FoliageChunk  ) >
 
@@ -217,9 +225,10 @@ fn handle_foliage_scene_data_changed (
     //foliage_types_resource: Res<FoliageTypesResource>,
 ) {
 
- 
+    
+   // if foliage_density_resource.is_changed() == false {return};
 
-    for (_foliage_scene_entity, _foliage_scene) in foliage_scene_data_query.iter() {
+  //  for (_foliage_scene_entity, _foliage_scene) in foliage_scene_data_query.iter() {
 
 
         for (chunk_entity, _chunk) in foliage_chunk_query.iter(){ 
@@ -230,7 +239,7 @@ fn handle_foliage_scene_data_changed (
             }
         }
 
-    }
+   // }
 
 
 

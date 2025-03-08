@@ -17,7 +17,7 @@ pub(crate) fn foliage_registration_plugin(app: &mut App) {
         (
            register_foliage_assets
         )
-            .chain()
+            .chain().run_if( resource_exists ::< FoliageTypesResource > )
             
     );
 }

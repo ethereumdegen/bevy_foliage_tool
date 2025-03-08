@@ -1,11 +1,12 @@
 use crate::foliage_chunk_layer::FoliageChunkLayer;
 //use crate::foliage_layer::FoliageBaseNormalMapU16;
 use crate::foliage_config::FoliageConfigResource;
+use crate::foliage_density::FoliageDensityResource;
 //use crate::foliage_layer::FoliageBaseHeightMapU16;
 //use crate::foliage_layer::FoliageDensityMapU8;
 //use crate::foliage_layer::FoliageLayer;
 //use crate::foliage_layer::FoliageLayerSystemSet;
-use crate::foliage_scene::FoliageSceneData;
+//use crate::foliage_scene::FoliageSceneData;
 
 use rand::Rng;
 use bevy::utils::HashMap ;
@@ -25,13 +26,32 @@ pub(crate) fn foliage_chunks_plugin(app: &mut App) {
 
      //   compute_normals_from_height, 
        handle_chunk_changed, 
-        handle_chunk_rebuilds,
-         update_chunk_visibility
+       
 
 
          ).chain(), // .in_set(FoliageChunkSystemSet)
                                                                   // .before(FoliageLayerSystemSet),
     );
+
+
+       app.add_systems(
+        PostUpdate,
+        (
+
+    
+        handle_chunk_rebuilds,
+         update_chunk_visibility 
+
+
+         ).chain()  .run_if( 
+          resource_exists::<FoliageConfigResource>
+          .and( resource_exists::<FoliageTypesResource>  )
+          .and( resource_exists::< FoliageDensityResource > )   )
+
+         , // .in_set(FoliageChunkSystemSet)
+                                                                  // .before(FoliageLayerSystemSet),
+    );
+
 }
 
 #[derive(SystemSet, Clone, Debug, Hash, PartialEq, Eq)]
@@ -206,8 +226,8 @@ fn handle_chunk_rebuilds(
     ) ,    With<ForceRebuildFoliageChunk >  > , //chunks parent should have terrain data
 
 
-
-   foliage_scene_query:  Query< (Entity, &FoliageSceneData) >,
+    foliage_density_resource: Res<  FoliageDensityResource >,
+  //  foliage_scene_query:  Query< (Entity, &FoliageSceneData) >,
 
 
     foliage_types_resource: Res<FoliageTypesResource>,
@@ -244,17 +264,13 @@ fn handle_chunk_rebuilds(
       }
 
 
-    let Some( ( foliage_scene_root_entity, foliage_scene_data )) = foliage_scene_query.get_single().ok() else {
-
-        warn!("foliage scene data is not a singleton!? ");
-
-        return 
-    };
+    
+    // let foliage_density_map = foliage_density_resource.0 ; 
 
       //recreate them !! 
 
 
-    for (layer_index,layer_data) in   foliage_scene_data.foliage_layers.iter() {
+    for (layer_index,foliage_layer_density_map) in   foliage_density_resource.0.iter() {
 
 
 
@@ -285,11 +301,11 @@ fn handle_chunk_rebuilds(
 
 
 
-                  if let Some( mut cmd ) = commands.get_entity( chunk_entity ){
+                 /*  if let Some( mut cmd ) = commands.get_entity( chunk_entity ){
                       cmd.set_parent( foliage_scene_root_entity ); 
 
                         
-                  }
+                  } */
 
 
               }
