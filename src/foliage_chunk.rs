@@ -1,11 +1,14 @@
-use crate::foliage_layer::FoliageBaseNormalMapU16;
+use crate::foliage_chunk_layer::FoliageChunkLayer;
+//use crate::foliage_layer::FoliageBaseNormalMapU16;
 use crate::foliage_config::FoliageConfigResource;
-use crate::foliage_layer::FoliageBaseHeightMapU16;
-use crate::foliage_layer::FoliageDensityMapU8;
-use crate::foliage_layer::FoliageLayer;
-use crate::foliage_layer::FoliageLayerSystemSet;
+//use crate::foliage_layer::FoliageBaseHeightMapU16;
+//use crate::foliage_layer::FoliageDensityMapU8;
+//use crate::foliage_layer::FoliageLayer;
+//use crate::foliage_layer::FoliageLayerSystemSet;
+use crate::foliage_scene::FoliageSceneData;
 
 use rand::Rng;
+use bevy::utils::HashMap ;
 
 use crate::foliage_proto;
 use crate::foliage_proto::FoliageProto;
@@ -20,7 +23,8 @@ pub(crate) fn foliage_chunks_plugin(app: &mut App) {
         PostUpdate,
         (
 
-        compute_normals_from_height, 
+     //   compute_normals_from_height, 
+       handle_chunk_changed, 
         handle_chunk_rebuilds,
          update_chunk_visibility
 
@@ -33,13 +37,54 @@ pub(crate) fn foliage_chunks_plugin(app: &mut App) {
 #[derive(SystemSet, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct FoliageChunkSystemSet;
 
+
+
+
+
+
+
 #[derive(Component)]
+#[require( FoliageChunkLayerChildren )]
 pub struct FoliageChunk {
-    pub chunk_offset: IVec2,
+    pub chunk_id: usize ,
 }
+
+
+#[derive(Component)]
+pub struct FoliageHeightMapData ( pub Vec<Vec<u16>> );
+
+#[derive(Component)]
+pub struct FoliageDimensionsData ( pub IVec2 );
+
+
+
+#[derive(Component)]
+pub struct FoliageDataSource ( pub Entity );
+
+
+
+#[derive(Component,Default)]
+pub struct FoliageChunkLayerChildren  ( pub HashMap< usize, Entity  > );
+
+
+
+
+
+
+
+
+
+
 
 #[derive(Component)]
 pub struct FoliageChunkNeedsRebuild;
+
+
+/*
+
+terrain chunks are 128 x 128 ! 
+
+*/
 
 fn update_chunk_visibility(
     foliage_viewer_query: Query<Entity, With<FoliageViewer>>,
@@ -72,7 +117,7 @@ fn update_chunk_visibility(
         };
         let chunk_translation = chunk_xform.translation();
 
-        let chunk_dimensions = Vec3::new(64.0, 0.0, 64.0);
+        let chunk_dimensions = Vec3::new(128.0, 0.0, 128.0);
 
         let chunk_center_translation = chunk_translation + chunk_dimensions / 2.0;
 
@@ -86,173 +131,183 @@ fn update_chunk_visibility(
     }
 }
 
-fn handle_chunk_rebuilds(
+
+#[derive(Component)]
+pub struct ForceRebuildFoliageChunk ;
+ 
+
+
+
+fn handle_chunk_changed(
     mut commands: Commands,
+  
+    chunk_query: Query<(
 
-    chunks_query: Query<(Entity, &FoliageChunk, &Parent), With<FoliageChunkNeedsRebuild>>,
+        Entity,  
 
-    foliage_layer_query: Query<(
-        &FoliageLayer,
-        &FoliageDensityMapU8,
-        Option<&FoliageBaseHeightMapU16>,
-        Option<&FoliageBaseNormalMapU16>,
-    )>, //chunks parent should have terrain data
+        &FoliageChunk  ,
+
+       // &FoliageLayer,
+      //  &FoliageDensityMapU8,  // this is in the foliage scene ! 
+
+        &FoliageHeightMapData,
+        &FoliageDimensionsData, 
+
+
+      //  Option<&FoliageBaseHeightMapU16>,
+      //  Option<&FoliageBaseNormalMapU16>,
+    ) , Or<(  Changed<FoliageDimensionsData > , Changed<FoliageHeightMapData> ) >>, //chunks parent should have terrain data
+
+  
+) {
+
+
+
+    /*
+        
+        insert ForceChunkRebuild !! which deletes all children (chunk layers) and re-creates them ! 
+
+    */
+
+    for (chunk_entity,  foliage_chunk, heightmap, dimensions ) in chunk_query.iter(){
+
+         if let Some(mut cmd) = commands.get_entity( chunk_entity ){
+
+
+            cmd.insert(  ForceRebuildFoliageChunk );
+         }
+
+
+    }
+   
+
+
+
+
+
+
+}
+
+fn handle_chunk_rebuilds(
+
+    mut commands: Commands,
+  
+    chunk_query: Query<(
+
+        Entity,  
+
+        &FoliageChunk  ,
+
+      
+        &FoliageHeightMapData,
+        &FoliageDimensionsData, 
+
+ 
+    ) ,    With<ForceRebuildFoliageChunk >  > , //chunks parent should have terrain data
+
+
+
+   foliage_scene_query:  Query< &FoliageSceneData >,
+
 
     foliage_types_resource: Res<FoliageTypesResource>,
 
     foliage_config_resource: Res<FoliageConfigResource>,
 
+  //  foliage_scene_data_resource: Res<FoliageSceneData > ,  //foliage layer data !!! 
+
     noise_resource: Res<NoiseResource>,
-    image_assets: Res<Assets<Image>>,
+     
+
 ) {
-    for (chunk_entity, foliage_chunk, parent) in chunks_query.iter() {
-        let parent_entity = parent.get();
-
-        let Some((foliage_layer, foliage_density_map_comp, foliage_base_height_comp, foliage_base_normal_comp )) =
-            foliage_layer_query.get(parent_entity).ok()
-        else {
-            continue;
-        };
-
-        if let Some(mut cmd) = commands.get_entity(chunk_entity) {
-            cmd.despawn_descendants()
-                .remove::<FoliageChunkNeedsRebuild>();
-        }
-
-        let density_map = &foliage_density_map_comp.0;
-        let base_height_map =  foliage_base_height_comp.map(|c| c.0 .as_ref() );
-        let base_normal_map =  foliage_base_normal_comp.map(|c| c.0 .as_ref() );
-
-        let boundary_dimensions = &foliage_layer.dimensions;
-        let chunk_rows = &foliage_layer.chunk_rows;
-
-        let chunk_dimensions = IVec2::new(
-            boundary_dimensions.x / *chunk_rows as i32,
-            boundary_dimensions.y / *chunk_rows as i32,
-        );
-
-        let chunk_offset = &foliage_chunk.chunk_offset;
-
-        let chunk_data_offset = IVec2::new(
-            chunk_offset.x * chunk_dimensions.x,
-            chunk_offset.y * chunk_dimensions.y,
-        );
-
-        let foliage_index = &foliage_layer.foliage_index;
-
-        let foliage_types_manifest = &foliage_types_resource.0;
-        let Some(foliage_type_definition) = foliage_types_manifest
-            .foliage_definitions
-            .get(*foliage_index)
-        else {
-            warn!(
-                "Cannot build foliage chunk - missing foliage type definition for index {}",
-                foliage_index
-            );
-            continue;
-        };
-
-         let mut rng = rand::thread_rng();
 
 
-        let foliage_config = &foliage_config_resource.0;
-        let height_scale = foliage_config.height_scale;
+    // delete all chunk_layer children 
 
-        let max_chunk_density = 256 as f32;
-        let max_noise_value = 256 as f32;
+  
+      for (chunk_entity,  foliage_chunk, heightmap, dimensions ) in chunk_query.iter(){
 
-        let noise_texture_handle = &noise_resource.density_noise_texture;
-        let noise_texture = image_assets
-            .get(noise_texture_handle)
-            .expect("no noise texture");
-
-        //   info!("rebuild foliage chunk");
-
-        for x in 0..chunk_dimensions.x {
-            for y in 0..chunk_dimensions.y {
-                let data_x_index = x + chunk_data_offset.x;
-                let data_y_index = y + chunk_data_offset.y;
-
-                let chunk_density_at_point =
-                    density_map[data_y_index as usize][data_x_index as usize];
-                let chunk_base_height_at_point = base_height_map.as_ref().map( |m: &&Vec<Vec<u16>>| m[data_y_index as usize][data_x_index as usize] ).unwrap_or( 0 );
-           
-                let chunk_base_normal_at_point:u16 = base_normal_map.as_ref().map( |m: &&Vec<Vec<u16>> | m[data_y_index as usize][data_x_index as usize] ).unwrap_or( 0 );
-
-                if chunk_density_at_point <= 0 {
-                    continue;
-                };
-
-                let chunk_density_scaled = chunk_density_at_point as f32 / max_chunk_density;
-
-                //this is probably wrong
-                let noise_tex_data_index = data_y_index * chunk_dimensions.y + data_x_index;
-
-                let noise_sample_at_point = noise_texture.data[noise_tex_data_index as usize];
-
-                let noise_sample_scaled = noise_sample_at_point as f32 / max_noise_value;
-                //  info!("noise_sample_at_point {} {}", noise_sample_at_point , noise_sample_scaled);
-
-                if chunk_density_scaled < noise_sample_scaled {
-                    continue;
-                }
-
-
-
-                // Generate a random floating-point number between 0.0 and 1.0
-                let random_float_x: f32 = rng.gen::<f32>() - 0.5;
-                let random_float_y: f32 = rng.gen::<f32>() - 0.5; // for rotation in radians 
-                let random_float_z: f32 = rng.gen::<f32>() - 0.5;
-
-
-
-                let foliage_offset = Vec3::new( noise_sample_scaled , 0.0,  1.0 - noise_sample_scaled ) * 2.0 ;
-                // info!("offset {}", foliage_offset);
-                // info!("chunk_density_at_point {:?}", chunk_density_at_point);
-
-                //combine with noise here ,  then spawn foliage    proto
-
-                let foliage_proto_translation = Vec3::new(
-                    x as f32 + foliage_offset.x + random_float_x,
-                    chunk_base_height_at_point as f32 * height_scale,
-                    y as f32 + foliage_offset.z + random_float_z,
-                );
+          if let Some( mut cmd ) = commands.get_entity( chunk_entity ){
+ 
+                cmd.despawn_descendants();
 
 
 
 
-                // add X and Z rotation from chunk_base_normal_at_point 
-                let  decoded_normal = decode_normal( chunk_base_normal_at_point );
-
-               //  let normal_x_rotation = Quat::from_rotation_x( decoded_normal.x ) ;
-               // let normal_z_rotation = Quat::from_rotation_z( decoded_normal.y ) ;
-                let normal_rotation = Quat::from_rotation_arc(Vec3::Y, decoded_normal);
 
 
-                let custom_y_rotation = Quat::from_rotation_y( 
-                 noise_sample_scaled * std::f32::consts::PI   //noise based rotation 
-                 +   random_float_y    // rotation based on the layer to prevent z-fighting 
-                   );
 
 
-                let final_rotation = normal_rotation * custom_y_rotation;
+          }
 
 
-                commands
-                    .spawn((
-                        Transform::from_translation(foliage_proto_translation).with_rotation( final_rotation ),
-                        FoliageProtoBundle::new(foliage_type_definition.clone()),
-                        Name::new("foliage_proto"),
-                        Visibility::default(),
-                    ))
-                    .set_parent(chunk_entity);
-            }
-        }
+      }
+
+
+    let Some(foliage_scene_data) = foliage_scene_query.get_single().ok() else {
+
+        warn!("foliage scene data is not a singleton!? ");
+
+        return 
+    };
+
+      //recreate them !! 
+
+
+    for (layer_index,layer_data) in   foliage_scene_data.foliage_layers.iter() {
+
+
+
+              for (chunk_entity,  foliage_chunk, heightmap, dimensions ) in chunk_query.iter(){
+
+                  if let Some( mut cmd ) = commands.get_entity( chunk_entity ){
+         
+                         
+
+
+
+                        commands.spawn(
+
+                            (
+                                FoliageChunkLayer {
+                                    chunk_id: foliage_chunk.chunk_id,
+                                    layer_index: *layer_index 
+
+                                }  
+
+
+                                //insert density map !? 
+
+                            )
+
+
+                         ).set_parent(chunk_entity);
+
+
+
+                        
+                  }
+
+
+              }
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
 }
 
-
-
+/*
 fn decode_normal(encoded_normal: u16) -> Vec3 {
 
      if encoded_normal == 0 {
@@ -330,4 +385,4 @@ fn encode_normal(normal: Vec3) -> u16 {
     let z = ((normal.z.clamp(-1.0, 1.0) + 1.0) / 2.0 * 255.0).round() as u16;
 
     (x << 8) | z
-}
+}*/

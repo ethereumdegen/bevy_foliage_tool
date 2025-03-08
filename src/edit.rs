@@ -1,7 +1,6 @@
-use crate::foliage_layer::FoliageBaseNormalMapU16;
-use crate::foliage_layer::FoliageBaseHeightMapU16;
+ 
 use crate::foliage_layer::FoliageLayerData;
-use crate::foliage_scene::FoliageScene;
+ 
 use crate::foliage_scene::FoliageSceneData;
 /*use crate::density_map::DensityMap;
 use crate::foliage_chunk::ChunkCoordinates;
@@ -49,7 +48,10 @@ pub(crate) fn bevy_foliage_edits_plugin(app: &mut App) {
     app.add_event::<EditFoliageEvent>()
         .add_event::<FoliageCommandEvent>()
         .add_event::<FoliageBrushEvent>()
-        .add_systems(Update, (apply_tool_edits, apply_command_events));
+       // .add_systems(Update, (apply_tool_edits, apply_command_events))
+
+
+       ;
 }
 
 #[derive(Debug, Clone)]
@@ -102,6 +104,8 @@ pub enum FoliageCommandEvent {
     SaveAll,
 }
 
+/*
+
 pub fn apply_command_events(
     // asset_server: Res<AssetServer>,
     foliage_scene_query: Query<(&FoliageScene, &Name)>,
@@ -109,8 +113,8 @@ pub fn apply_command_events(
     foliage_layer_query: Query<(
         &FoliageLayer,
         &FoliageDensityMapU8,
-        Option<&FoliageBaseHeightMapU16>,
-         Option<&FoliageBaseNormalMapU16>,
+     //   Option<&FoliageBaseHeightMapU16>,
+       //  Option<&FoliageBaseNormalMapU16>,
     )>, //chunks parent should have terrain data
 
     foliage_config_resource: Res<FoliageConfigResource>,
@@ -147,8 +151,8 @@ pub fn apply_command_events(
                                 FoliageLayerData {
                                     foliage_index: *layer_index,
                                     density_map: density_data.clone(),
-                                    base_height_map: height_data.cloned(),
-                                    base_normal_map: normal_data.cloned(),
+                                  //  base_height_map: height_data.cloned(),
+                                  //  base_normal_map: normal_data.cloned(),
                                 },
                             );
 
@@ -170,16 +174,16 @@ pub fn apply_command_events(
                     };
 
                     //for now
-                    let save_result = foliage_scene_data.save_to_disk(foliage_data_files_path);
+                    //let save_result = foliage_scene_data.save_to_disk(foliage_data_files_path);
 
-                    info!(
+                   /* info!(
                         "saving foliage {:?} {} {}",
                         save_result, foliage_data_files_path, foliage_scene_name
                     );
 
                     if let Err(error) = save_result {
                         warn!(error);
-                    }
+                    }*/
                 }
             }
         }
@@ -194,7 +198,7 @@ pub fn apply_tool_edits(
     mut foliage_layer_query: Query<(
         &FoliageLayer,
         &mut FoliageDensityMapU8,
-        &FoliageBaseHeightMapU16,
+       //&FoliageBaseHeightMapU16,
     )>, //chunks parent should have terrain data
 
     foliage_config_resource: Res<FoliageConfigResource>,
@@ -330,3 +334,4 @@ fn apply_hardness_multiplier(
 ) -> f32 {
     original_height + (new_height - original_height) * hardness_multiplier
 }
+*/

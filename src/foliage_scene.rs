@@ -1,8 +1,10 @@
+use crate::foliage_chunk::ForceRebuildFoliageChunk;
+use crate::foliage_chunk::FoliageChunk;
 use crate::foliage_config::FoliageConfigResource;
-use crate::foliage_layer::FoliageLayerData;
+//use crate::foliage_layer::{FoliageDensityMapU8, FoliageLayerData};
 use crate::FoliageTypesResource;
 
-use crate::foliage_layer::FoliageLayer;
+//use crate::foliage_layer::FoliageLayer;
 use bevy::prelude::*;
 use std::fs::{create_dir_all, File};
 use std::io::{Read, Write};
@@ -12,49 +14,75 @@ use bevy::utils::HashMap;
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn foliage_scene_plugin(app: &mut App) {
-    app.add_systems(Update, unpack_foliage_scene_data_components);
+    app
+      //  .init_resource::<FoliageSceneData>()
+
+   //.add_systems(Update, unpack_foliage_scene_data_components)
+
+
+   ;
 }
 
+
+#[derive(Component, Debug, Clone, Serialize, Deserialize)]
+pub struct FoliageDensityMapU8(pub Vec<Vec<u8>>);
+
+impl FoliageDensityMapU8 {
+    pub fn new(dimensions: IVec2) -> Self {
+        let (width, height) = (dimensions.x as usize, dimensions.y as usize);
+        let map = vec![vec![0u8; width]; height];
+        Self(map)
+    }
+}
+
+
+
+ /*
 #[derive(Component, Clone, Debug)]
 pub struct FoliageScene {
-    pub foliage_scene_name: String,
+    //pub foliage_scene_name: String,
 
     pub foliage_layer_entities_map: HashMap<usize, Entity>,
 }
+ 
+*/
 
 /// A serializeable struct that can be cached on disk as a file
 /// and it describes all of the foliage layers for an entire scene or level
 /// where each foliage layer has a density map, y_offset map, mesh handle and material handle  
-#[derive(Component, Clone, Debug, Serialize, Deserialize)]
+#[derive(Component, Clone, Debug, Serialize, Deserialize, Default )]
 pub struct FoliageSceneData {
-    pub foliage_scene_name: String,
-    pub foliage_layers: HashMap<usize, FoliageLayerData>,
+  //  pub foliage_scene_name: String,
+    pub foliage_layers: HashMap<usize,FoliageDensityMapU8 >,
 }
 
 impl FoliageSceneData {
-    pub fn new(scene_name: &str) -> Self {
+    pub fn new( ) -> Self {
         Self {
-            foliage_scene_name: scene_name.into(),
+           // foliage_scene_name: scene_name.into(),
             foliage_layers: HashMap::new(),
         }
     }
 
     pub fn create_or_load(foliage_data_files_path: &str, scene_name: &str) -> Self {
-        let load_from_disk_result = Self::load_from_disk(foliage_data_files_path, scene_name);
+
+        let full_file_path = format!("{}{}", foliage_data_files_path , scene_name);
+
+        let load_from_disk_result = Self::load_from_disk( &full_file_path  );
 
         //	 	info!("foliage load_from_disk_result {:?}",load_from_disk_result);
 
         match load_from_disk_result {
             Some(loaded) => loaded,
 
-            None => Self::new(scene_name),
+            None => Self::new( ),
         }
     }
 
-    pub fn save_to_disk(&self, foliage_data_files_path: &str) -> Result<(), String> {
-        let scene_name = self.foliage_scene_name.clone();
+      fn save_to_disk(&self, full_file_path: &str) -> Result<(), String> {
+       // let scene_name = self.foliage_scene_name.clone();
         // Ensure the directory exists
-        let full_file_path = format!("{}{}", foliage_data_files_path, scene_name);
+        //let full_file_path = format!("{}", foliage_data_files_path );
 
         // Open the file for writing
         let file_result = File::create(full_file_path);
@@ -81,8 +109,8 @@ impl FoliageSceneData {
     }
 
     // This function loads the FoliageSceneData from disk
-    pub fn load_from_disk(foliage_data_files_path: &str, scene_name: &str) -> Option<Self> {
-        let full_file_path = format!("{}{}", foliage_data_files_path, scene_name);
+      fn load_from_disk(full_file_path: &str ) -> Option<Self> {
+      //  let full_file_path = format!("{}{}", foliage_data_files_path, scene_name);
 
         // Open the file for reading
         let file_result = File::open(full_file_path);
@@ -114,7 +142,96 @@ impl FoliageSceneData {
     }
 }
 
-/// This will spawn child layer entities  -> when those get 'added', more things happen../spawn..
+
+
+pub struct LoadFoliageScene {
+    pub name: String,
+    pub path: String, 
+
+}  //path 
+
+impl Command for LoadFoliageScene {
+
+
+
+
+        fn apply(self, world: &mut World) { 
+            let full_file_path = format!("{}{}",  &self.path , &self.name  );
+
+            let foliage_scene_data = FoliageSceneData::load_from_disk(  &full_file_path  ) ;
+ 
+            if let Some( foliage_scene_data ) = foliage_scene_data {
+                world.spawn( (  
+                    Name::new( self.name.clone() ),
+                    foliage_scene_data
+                     ) );
+            }
+
+
+        }
+}
+
+
+
+pub struct SaveFoliageScene {
+
+    pub path:String 
+}  //path 
+
+impl Command for SaveFoliageScene {
+
+
+
+        fn apply(self, world: &mut World) { 
+
+
+             let mut foliage_scene_query = world.query::< ( &Name, & FoliageSceneData  ) >();
+
+             for (name , scene_data ) in foliage_scene_query.iter(world) {
+
+                      FoliageSceneData::save_to_disk( scene_data,  &self.path );
+             }  
+ 
+        }
+
+}
+
+
+
+    // changes like from painting the density ! ! 
+fn handle_foliage_scene_data_changed (
+    mut commands: Commands,
+
+    foliage_scene_data_query: Query<(Entity, &  FoliageSceneData), Changed<FoliageSceneData>>,
+
+    foliage_chunk_query: Query< (  Entity, & FoliageChunk  ) >
+
+   // foliage_config_resource: Res<FoliageConfigResource>,
+    //foliage_types_resource: Res<FoliageTypesResource>,
+) {
+
+ 
+
+    for (foliage_scene_entity, foliage_scene) in foliage_scene_data_query.iter() {
+
+
+        for (chunk_entity, chunk) in foliage_chunk_query.iter(){ 
+
+            if let Some(mut cmd) = commands.get_entity( chunk_entity ){
+
+                cmd.insert( ForceRebuildFoliageChunk  );
+            }
+        }
+
+    }
+
+
+
+}
+
+
+// This will spawn child layer entities  -> when those get 'added', more things happen../spawn..
+/*
 fn unpack_foliage_scene_data_components(
     mut commands: Commands,
 
@@ -159,8 +276,8 @@ fn unpack_foliage_scene_data_components(
 
                     let layer_entity = child_builder
                         .spawn((
-                            Transform::default(),
-                            Visibility::default(),
+                           // Transform::default(),
+                          //  Visibility::default(),
                             layer_data.clone(),
                         ))
                         .id();
@@ -168,10 +285,14 @@ fn unpack_foliage_scene_data_components(
                     foliage_layer_entities_map.insert(layer_index, layer_entity);
                 }
             })
-            .insert((FoliageScene {
-                foliage_scene_name: foliage_scene_data.foliage_scene_name.clone(),
+            .insert((
+
+                
+                FoliageScene {
+             //   foliage_scene_name: foliage_scene_data.foliage_scene_name.clone(),
                 foliage_layer_entities_map,
             },
             Visibility::default())  );
     }
 }
+*/

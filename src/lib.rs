@@ -13,7 +13,11 @@ pub mod edit;
 pub mod foliage_chunk;
 
 pub mod foliage_config;
-pub mod foliage_layer;
+
+pub mod foliage_chunk_layer;
+
+
+//pub mod foliage_layer;
 pub mod foliage_scene;
 pub mod foliage_types;
 //pub mod foliage_loading_state;
@@ -48,7 +52,7 @@ impl Plugin for BevyFoliageToolPlugin {
             .add_plugins(foliage_chunk::foliage_chunks_plugin)
             .add_plugins(noise::noise_plugin)
             .add_plugins(foliage_scene::foliage_scene_plugin)
-            .add_plugins(foliage_layer::foliage_layer_plugin)
+            .add_plugins(foliage_chunk_layer::foliage_chunk_layer_plugin)
             .add_plugins(bevy_foliage_edits_plugin)
 
            
