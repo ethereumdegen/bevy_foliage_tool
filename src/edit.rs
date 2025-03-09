@@ -1,17 +1,6 @@
  
 use crate::foliage_density::FoliageDensityResource;
-//use crate::foliage_layer::FoliageLayerData;
  
-//use crate::foliage_scene::FoliageSceneData;
-/*use crate::density_map::DensityMap;
-use crate::foliage_chunk::ChunkCoordinates;
-use crate::foliage_chunk::FoliageChunk;
-use crate::density_map::DensityMapU8;
-use crate::foliage_chunk::FoliageChunkDensityData;
-
-*/
-//use crate::foliage_layer::FoliageDensityMapU8;
-//use crate::foliage_layer::FoliageLayer;
 use crate::FoliageConfigResource;
 use std::fs::File;
 use std::io::BufWriter;
@@ -224,18 +213,14 @@ pub fn apply_tool_edits(
         let brush_hardness = ev.brush_hardness;
         let brush_type = &ev.brush_type;
 
-        info!("apply foliage tool edit 1 ");
-
-        //for (chunk_entity, chunk_transform_vec2) in chunk_entities_within_range {
-        //   if let Ok((_, _, mut chunk_density_data, _)) = foliage_chunk_query.get_mut(chunk_entity) {
+       
         let tool_coords_local = tool_coords;
 
         let foliage_config = &foliage_config_resource.0;
 
         let foliage_dimensions = &foliage_config.boundary_dimensions;
 
-        //let img_data_length = chunk_density_data.density_map_data.len();
-
+      
         match &ev.tool {
             EditingTool::SetFoliageDensity {
                 foliage_index,
@@ -244,34 +229,15 @@ pub fn apply_tool_edits(
 
 
 
-               // for foliage_scene in foliage_scene_query.iter() {
-                    //  let foliage_scene_name = foliage_scene.foliage_scene_name.clone() ;
-                    // let mut layers_data_map = HashMap::new();
-
-                  //  let foliage_layer_entities_map = &foliage_scene.foliage_layer_entities_map;
-
-               /*     let Some(selected_layer_entity) =
-                        foliage_layer_entities_map.get(&(*foliage_index as usize))
-                    else {
-                        warn!("no matching foliage layer entity");
-                        continue;
-                    };   */
-
-
-
+           
 
 
                     let Some( mut existing_foliage_layer_density_data ) = foliage_density_map.0.get_mut( &(*foliage_index as usize ) ) else {
                         warn!( "no foliage layer data to mutate ! " );
                         continue; 
                     };
-
-                    // for ( layer_index, layer_entity) in foliage_layer_entities_map.iter()  {
-
-                 /*   if let Some((_foliage_layer, mut density_data_comp, _height_data_comp)) =
-                        foliage_layer_query.get_mut(*selected_layer_entity).ok()
-                    {*/
-                        info!("apply foliage tool edit 2 ");
+ 
+                    
 
                         let density_data = &mut existing_foliage_layer_density_data.0;
 
@@ -318,21 +284,7 @@ pub fn apply_tool_edits(
 
  
 
-
-
-                  //  }
-                    //  }
-               // } // for  foliage_scene
-
-                /* apply_density_edit(
-                    &mut chunk_density_data.density_map_data,
-                    tool_coords_local,
-                    radius,
-                    brush_hardness,
-                     density,
-                    brush_type,
-                    &mut evt_writer,
-                );*/
+ 
             }
         }
         //  }

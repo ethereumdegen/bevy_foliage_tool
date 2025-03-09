@@ -86,14 +86,14 @@ fn build_chunk_layers (
 
         let global_xform = global_xform_query.get( chunk_layer_entity );
 
-        println!("build foliage chunk layer ! ");
+       // println!("build foliage chunk layer ! ");
 
 
-        if let Some(global_xform) = global_xform .ok() {
+       // if let Some(global_xform) = global_xform .ok() {
 
-            println!( "global xform {:?}", global_xform.translation() );
+        //    println!( "global xform {:?}", global_xform.translation() );
 
-        }
+       // }
 
      let chunk_id = foliage_chunk.chunk_id; // need this for height data 
         let layer_index = chunk_layer.layer_index; // need this for density data 
@@ -147,7 +147,7 @@ fn build_chunk_layers (
                 chunk_dimensions
               ); 
 
-              info!( " chunk_dimensions {}", chunk_dimensions );
+           //   info!( " chunk_dimensions {}", chunk_dimensions );
 
             /*
     
@@ -191,7 +191,7 @@ fn build_chunk_layers (
 
                    if let Some(xform) = transform_opt {
 
-                           info!(  "spawning foliage proto at {:?}" , xform);
+                         //  info!(  "spawning foliage proto at {:?}" , xform);
 
                             commands.spawn(
 
@@ -213,11 +213,13 @@ fn build_chunk_layers (
 
 
 
-                   }else {
+                   }
+
+                   /*else {
 
                     info!( "not spawning a foliage proto " )
 
-                   }
+                   }*/
 
                /* let data_x_index = x + chunk_data_offset.x;
                 let data_y_index = y + chunk_data_offset.y;
@@ -284,11 +286,13 @@ fn get_foliage_node_spawn_using_noise(
         
         // Get height at the current point
         let height_at_point = chunk_height_data.0[y][x] ;
+
+         
         
         // Scale density to 0.0-1.0 range
-    //    let density_scaled =  density_at_point as f32  /*/ max_chunk_density*/  ;
+          let density_scaled =  density_at_point as f32   / max_chunk_density ;
 
-     let density_scaled = 0.9 ; 
+   //  let density_scaled = 0.9 ; 
         
         // Sample noise texture for this position
         // This calculation may need adjustment based on your texture coordinates
@@ -299,7 +303,7 @@ fn get_foliage_node_spawn_using_noise(
         // Skip if density is less than noise (for natural distribution)
         if density_scaled < noise_sample_scaled {
 
-            println!( " density, noise  {} {} {} ", density_at_point, density_scaled, noise_sample_scaled );
+            //   println!( " density, noise  {} {} {} ", density_at_point, density_scaled, noise_sample_scaled );
             return None;
         }
         
@@ -324,7 +328,7 @@ fn get_foliage_node_spawn_using_noise(
         );
         
         // Optional: Get normal from height map for better placement
-        let normal = get_normal_from_height_data( chunk_height_data , x, y ).unwrap_or(Vec3::Y);
+        let normal = get_normal_from_height_data( chunk_height_data , height_scale , x, y ).unwrap_or(Vec3::Y);
         
         // Create rotation based on normal and add some randomness
         let normal_rotation = Quat::from_rotation_arc(Vec3::Y, normal);
@@ -344,6 +348,7 @@ fn get_foliage_node_spawn_using_noise(
 
 fn get_normal_from_height_data(
     height_data: &FoliageHeightMapData,
+    height_scale: f32, 
     x: usize,
     y: usize,
 ) -> Option<Vec3> {
@@ -355,7 +360,10 @@ fn get_normal_from_height_data(
     if y == 0 || y >= rows - 1 || x == 0 || x >= cols - 1 {
         return Some(Vec3::Y); // Default to straight up normal for edges
     }
-    
+        
+   // let height_max = 65025; 
+
+
     // Get height values from the neighboring cells
     // Using a 3x3 grid centered at (x,y)
     let h_center = height_map[y][x] as f32;
@@ -378,7 +386,7 @@ fn get_normal_from_height_data(
     
     // Scale factor to dampen the slope influence
     // Higher values = gentler slopes/rotations
-    let slope_scale_factor = 5.0;
+    let slope_scale_factor = 1.0 / height_scale; //  1000.0;    // inverse of height scale !! 
     
     let normal = Vec3::new(
         -dx / slope_scale_factor, 

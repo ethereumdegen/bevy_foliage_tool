@@ -77,25 +77,11 @@ impl FoliageDensityMapU8 {
 
 
 
- /*
-#[derive(Component, Clone, Debug)]
-pub struct FoliageScene {
-    //pub foliage_scene_name: String,
-
-    pub foliage_layer_entities_map: HashMap<usize, Entity>,
-}
  
-*/
-
 //contains a  foliage density map for each layer 
 #[derive(Clone,Debug,Resource,Serialize,Deserialize)]
 pub struct FoliageDensityResource  ( pub  HashMap<usize,FoliageDensityMapU8 >) ; 
-
-/*{
-  //  pub foliage_scene_name: String,
-    pub foliage_layers: HashMap<usize,FoliageDensityMapU8 >,
-}
-*/
+ 
 
 
 /// A serializeable struct that can be cached on disk as a file
@@ -269,20 +255,13 @@ fn handle_foliage_density_resource_changed (
 
     foliage_density_resource: Res<FoliageDensityResource>,
 
-   // foliage_scene_data_query: Query<(Entity, &  FoliageSceneData), Changed<FoliageSceneData>>,
-
+  
     foliage_chunk_query: Query< (  Entity, & FoliageChunk  ) >
-
-   // foliage_config_resource: Res<FoliageConfigResource>,
-    //foliage_types_resource: Res<FoliageTypesResource>,
+ 
 ) {
 
     
-    // if foliage_density_resource.is_changed() == false {return};
-
-  //  for (_foliage_scene_entity, _foliage_scene) in foliage_scene_data_query.iter() {
-
-        println!("foliage_density_resource changed ");
+   
         for (chunk_entity, _chunk) in foliage_chunk_query.iter(){ 
 
             if let Some(mut cmd) = commands.get_entity( chunk_entity ){
@@ -291,76 +270,9 @@ fn handle_foliage_density_resource_changed (
             }
         }
 
-   // }
-
+   
 
 
 }
 
-
-// This will spawn child layer entities  -> when those get 'added', more things happen../spawn..
-/*
-fn unpack_foliage_scene_data_components(
-    mut commands: Commands,
-
-    foliage_scene_data_query: Query<(Entity, &mut FoliageSceneData), Added<FoliageSceneData>>,
-
-    foliage_config_resource: Res<FoliageConfigResource>,
-    foliage_types_resource: Res<FoliageTypesResource>,
-) {
-    for (foliage_scene_entity, foliage_scene_data) in foliage_scene_data_query.iter() {
-        let mut layers_data_array = foliage_scene_data.foliage_layers.clone();
-
-        let foliage_config = &foliage_config_resource.0;
-        let boundary_dimensions = foliage_config.boundary_dimensions;
-
-        //this has an issue ..
-        //if layers_data_array.is_empty() {
-        //add in the ones from the types manifest
-        let foliage_definitions = &foliage_types_resource.0.foliage_definitions;
-
-        for (foliage_def_index, _foliage_definition) in foliage_definitions.iter().enumerate() {
-            if foliage_def_index >= layers_data_array.len() {
-                layers_data_array.insert(
-                    foliage_def_index,
-                    FoliageLayerData::new(foliage_def_index, boundary_dimensions),
-                );
-            }
-        }
-        //  }
-
-        let mut foliage_layer_entities_map = HashMap::new();
-
-        let Some(mut foliage_scene_cmd) = commands.get_entity(foliage_scene_entity) else {
-            continue;
-        };
-
-        info!("unpacking foliage scene ");
-        foliage_scene_cmd
-            .remove::<FoliageSceneData>()
-            .with_children(|child_builder| {
-                for (layer_index, layer_data) in layers_data_array {
-                    info!("spawn foliage layer data {}", layer_index);
-
-                    let layer_entity = child_builder
-                        .spawn((
-                           // Transform::default(),
-                          //  Visibility::default(),
-                            layer_data.clone(),
-                        ))
-                        .id();
-
-                    foliage_layer_entities_map.insert(layer_index, layer_entity);
-                }
-            })
-            .insert((
-
-                
-                FoliageScene {
-             //   foliage_scene_name: foliage_scene_data.foliage_scene_name.clone(),
-                foliage_layer_entities_map,
-            },
-            Visibility::default())  );
-    }
-}
-*/
+ 
