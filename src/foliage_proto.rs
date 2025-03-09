@@ -17,7 +17,7 @@ pub(crate) fn foliage_proto_plugin(app: &mut App) {
     );
 }
 
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Reflect )]
 pub struct FoliageProto {
     pub foliage_definition: FoliageDefinition,
 }

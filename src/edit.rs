@@ -1,4 +1,5 @@
  
+use crate::foliage_density::FoliageDensityResource;
 //use crate::foliage_layer::FoliageLayerData;
  
 //use crate::foliage_scene::FoliageSceneData;
@@ -48,7 +49,16 @@ pub(crate) fn bevy_foliage_edits_plugin(app: &mut App) {
     app.add_event::<EditFoliageEvent>()
         .add_event::<FoliageCommandEvent>()
         .add_event::<FoliageBrushEvent>()
-       // .add_systems(Update, (apply_tool_edits, apply_command_events))
+
+
+      .add_systems(Update, 
+
+        (apply_tool_edits, apply_command_events).chain().run_if( resource_exists:: < FoliageDensityResource > )
+
+
+
+
+        )
 
 
        ;
@@ -103,19 +113,22 @@ pub enum FoliageBrushEvent {
 pub enum FoliageCommandEvent {
     SaveAll,
 }
-
-/*
+ 
 
 pub fn apply_command_events(
     // asset_server: Res<AssetServer>,
-    foliage_scene_query: Query<(&FoliageScene, &Name)>,
 
-    foliage_layer_query: Query<(
+
+   mut  foliage_density_map: ResMut< FoliageDensityResource >,
+
+
+   // foliage_scene_query: Query<(&FoliageScene, &Name)>,
+
+  /*  foliage_layer_query: Query<(
         &FoliageLayer,
         &FoliageDensityMapU8,
-     //   Option<&FoliageBaseHeightMapU16>,
-       //  Option<&FoliageBaseNormalMapU16>,
-    )>, //chunks parent should have terrain data
+    
+    )>,  */
 
     foliage_config_resource: Res<FoliageConfigResource>,
 
@@ -132,6 +145,9 @@ pub fn apply_command_events(
                 // let asset_folder_path = PathBuf::from("assets/");
 
                 let foliage_config = &foliage_config_resource.0;
+
+
+/*
 
                 let foliage_data_files_path = &foliage_config.foliage_data_files_path;
 
@@ -156,15 +172,7 @@ pub fn apply_command_events(
                                 },
                             );
 
-                            /* layers_data_array.push(
-                                FoliageLayerData {
 
-                                    foliage_index: foliage_layer.foliage_index,
-                                    density_map : density_data.clone(),
-                                    base_height_map: height_data.clone(),
-
-                                }
-                            );*/
                         }
                     }
 
@@ -185,6 +193,9 @@ pub fn apply_command_events(
                         warn!(error);
                     }*/
                 }
+*/
+
+
             }
         }
     }
@@ -193,13 +204,14 @@ pub fn apply_command_events(
 }
 
 pub fn apply_tool_edits(
-    foliage_scene_query: Query<&FoliageScene>,
+    mut  foliage_density_map: ResMut< FoliageDensityResource >,
 
-    mut foliage_layer_query: Query<(
+ /*   mut foliage_layer_query: Query<(
         &FoliageLayer,
         &mut FoliageDensityMapU8,
        //&FoliageBaseHeightMapU16,
     )>, //chunks parent should have terrain data
+*/
 
     foliage_config_resource: Res<FoliageConfigResource>,
 
@@ -229,27 +241,39 @@ pub fn apply_tool_edits(
                 foliage_index,
                 density: new_density,
             } => {
-                for foliage_scene in foliage_scene_query.iter() {
+
+
+
+               // for foliage_scene in foliage_scene_query.iter() {
                     //  let foliage_scene_name = foliage_scene.foliage_scene_name.clone() ;
                     // let mut layers_data_map = HashMap::new();
 
-                    let foliage_layer_entities_map = &foliage_scene.foliage_layer_entities_map;
+                  //  let foliage_layer_entities_map = &foliage_scene.foliage_layer_entities_map;
 
-                    let Some(selected_layer_entity) =
+               /*     let Some(selected_layer_entity) =
                         foliage_layer_entities_map.get(&(*foliage_index as usize))
                     else {
                         warn!("no matching foliage layer entity");
                         continue;
+                    };   */
+
+
+
+
+
+                    let Some( mut existing_foliage_layer_density_data ) = foliage_density_map.0.get_mut( &(*foliage_index as usize ) ) else {
+                        warn!( "no foliage layer data to mutate ! " );
+                        continue; 
                     };
 
                     // for ( layer_index, layer_entity) in foliage_layer_entities_map.iter()  {
 
-                    if let Some((_foliage_layer, mut density_data_comp, _height_data_comp)) =
+                 /*   if let Some((_foliage_layer, mut density_data_comp, _height_data_comp)) =
                         foliage_layer_query.get_mut(*selected_layer_entity).ok()
-                    {
+                    {*/
                         info!("apply foliage tool edit 2 ");
 
-                        let density_data = &mut density_data_comp.0;
+                        let density_data = &mut existing_foliage_layer_density_data.0;
 
                         match brush_type {
                             BrushType::SetExact => {
@@ -290,9 +314,15 @@ pub fn apply_tool_edits(
                             }
                             _ => warn!("Brush type not implemented!"),
                         }
-                    }
+
+
+ 
+
+
+
+                  //  }
                     //  }
-                } // for  foliage_scene
+               // } // for  foliage_scene
 
                 /* apply_density_edit(
                     &mut chunk_density_data.density_map_data,
@@ -334,4 +364,4 @@ fn apply_hardness_multiplier(
 ) -> f32 {
     original_height + (new_height - original_height) * hardness_multiplier
 }
-*/
+ 

@@ -1,6 +1,7 @@
 use crate::foliage_chunk::ForceRebuildFoliageChunk;
 use crate::foliage_chunk::FoliageChunk;
 use crate::foliage_config::FoliageConfigResource;
+use crate::foliage_types::FoliageDefinition;
 //use crate::foliage_layer::{FoliageDensityMapU8, FoliageLayerData};
 use crate::FoliageTypesResource;
 
@@ -24,7 +25,7 @@ pub(crate) fn foliage_density_plugin(app: &mut App) {
 }
 
 
-#[derive(Component, Debug, Clone, Serialize, Deserialize)]
+#[derive(Component, Debug, Clone, Serialize, Deserialize,Default )]
 pub struct FoliageDensityMapU8(pub Vec<Vec<u8>>);
 
 impl FoliageDensityMapU8 {
@@ -33,6 +34,45 @@ impl FoliageDensityMapU8 {
         let map = vec![vec![0u8; width]; height];
         Self(map)
     }
+
+
+    pub fn get_sub_section_by_chunk_id( &self, chunk_id: u32, chunk_rows: u32, chunk_dimensions: IVec2 ) -> Self  {
+
+        let chunk_x = (chunk_id % chunk_rows) as usize;
+          let chunk_y = (chunk_id / chunk_rows) as usize;
+    
+
+
+         let start_x = chunk_x * chunk_dimensions.x as usize;
+        let start_y = chunk_y * chunk_dimensions.y as usize;
+        
+        // Create a new empty density map with the chunk dimensions
+        let mut subsection = FoliageDensityMapU8::new(chunk_dimensions);
+        
+        // Fill the subsection with data from the main density map
+        for y in 0..chunk_dimensions.y as usize {
+            for x in 0..chunk_dimensions.x as usize {
+                // Calculate indices in the original map
+                let orig_y = start_y + y;
+                let orig_x = start_x + x;
+                
+                // Bounds checking to prevent indexing out of bounds
+                if orig_y < self.0.len() && orig_x < self.0[0].len() {
+                    // Copy the value from the original map to the subsection
+                    subsection.0[y][x] = self.0[orig_y][orig_x];
+                }
+                // If out of bounds, leave as default 0 value
+            }
+        }
+        
+        subsection
+
+
+
+
+
+    }
+
 }
 
 
@@ -68,11 +108,23 @@ pub struct FoliageSceneData {
 } */
 
 impl FoliageDensityResource {
-    pub fn new( ) -> Self {
-        Self  ( HashMap::new() )
+    pub fn new( layer_dimension: IVec2,  foliage_definitions: Vec<FoliageDefinition> ) -> Self {
+       
+
+        let mut new_hashmap = HashMap::new();
+
+
+        for (layer_index, _def) in foliage_definitions.iter().enumerate() {
+
+
+                new_hashmap.insert(  layer_index,  FoliageDensityMapU8::new( layer_dimension ) );
+        }
+
+
+        Self  ( new_hashmap )
     }
 
-      fn create_or_load(foliage_data_files_path: &str, scene_name: &str) -> Self {
+      /*pub fn create_or_load(foliage_data_files_path: &str, scene_name: &str) -> Self {
 
         let full_file_path = format!("{}{}", foliage_data_files_path , scene_name);
 
@@ -85,9 +137,9 @@ impl FoliageDensityResource {
 
             None => Self::new( ),
         }
-    }
+    }*/
 
-      fn save_to_disk(&self, full_file_path: &str) -> Result<(), String> {
+     pub fn save_to_disk(&self, full_file_path: &str) -> Result<(), String> {
        // let scene_name = self.foliage_scene_name.clone();
         // Ensure the directory exists
         //let full_file_path = format!("{}", foliage_data_files_path );
@@ -117,7 +169,7 @@ impl FoliageDensityResource {
     }
 
     // This function loads the FoliageSceneData from disk
-      fn load_from_disk(full_file_path: &str ) -> Option<Self> {
+      pub fn load_from_disk(full_file_path: &str ) -> Option<Self> {
       //  let full_file_path = format!("{}{}", foliage_data_files_path, scene_name);
 
         // Open the file for reading
@@ -151,7 +203,7 @@ impl FoliageDensityResource {
 }
 
 
-
+/*
 pub struct CreateOrLoadFoliageDensityMap {
     pub name: String,
     pub path: String, 
@@ -179,7 +231,7 @@ impl Command for CreateOrLoadFoliageDensityMap {
 
         }
 }
-
+*/
 
 
 pub struct SaveFoliageDensityMap {
@@ -226,11 +278,11 @@ fn handle_foliage_density_resource_changed (
 ) {
 
     
-   // if foliage_density_resource.is_changed() == false {return};
+    // if foliage_density_resource.is_changed() == false {return};
 
   //  for (_foliage_scene_entity, _foliage_scene) in foliage_scene_data_query.iter() {
 
-
+        println!("foliage_density_resource changed ");
         for (chunk_entity, _chunk) in foliage_chunk_query.iter(){ 
 
             if let Some(mut cmd) = commands.get_entity( chunk_entity ){

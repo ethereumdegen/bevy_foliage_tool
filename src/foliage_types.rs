@@ -27,7 +27,7 @@ impl FoliageTypesManifest {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Reflect )]
 pub struct FoliageDefinition {
     pub name: String,
 

@@ -20,8 +20,11 @@ use crate::FoliageTypesResource;
 use bevy::prelude::*;
 
 pub(crate) fn foliage_chunks_plugin(app: &mut App) {
-    app.add_systems(
-        PostUpdate,
+    app
+
+    .register_type::<FoliageChunkActive>()
+    .add_systems(
+         Update,
         (
 
      //   compute_normals_from_height, 
@@ -34,13 +37,31 @@ pub(crate) fn foliage_chunks_plugin(app: &mut App) {
     );
 
 
-       app.add_systems(
-        PostUpdate,
+      app.add_systems(
+          Update,
         (
 
     
-        handle_chunk_rebuilds,
-         update_chunk_visibility 
+       
+         update_chunk_active,
+         update_chunk_visible  
+
+
+         ).chain()  .run_if( 
+          resource_exists::<FoliageConfigResource>
+          .and( resource_exists::<FoliageTypesResource>  )
+          .and( resource_exists::< FoliageDensityResource > )   )
+
+         , // .in_set(FoliageChunkSystemSet)
+                                                                  // .before(FoliageLayerSystemSet),
+    );
+
+       app.add_systems(
+         PostUpdate,
+        (
+
+    
+        handle_chunk_rebuilds, 
 
 
          ).chain()  .run_if( 
@@ -64,7 +85,7 @@ pub struct FoliageChunkSystemSet;
 
 
 #[derive(Component)]
-#[require( FoliageChunkLayerChildren )]
+#[require( FoliageChunkLayerChildren , FoliageChunkActive )]
 pub struct FoliageChunk {
     pub chunk_id: u32 ,
 }
@@ -89,8 +110,13 @@ pub struct FoliageChunkLayerChildren  ( pub HashMap< usize, Entity  > );
 
 
 
+#[derive(Component,Default,PartialEq, Eq, Reflect  )]
+pub enum FoliageChunkActive {
+    #[default]
+    Deactivated,
+    Activated, 
 
-
+}
 
 
 
@@ -106,15 +132,17 @@ terrain chunks are 128 x 128 !
 
 */
 
-fn update_chunk_visibility(
+fn update_chunk_active(
     foliage_viewer_query: Query<Entity, With<FoliageViewer>>,
 
     global_xform_query: Query<&GlobalTransform>,
 
-    mut foliage_chunk_query: Query<(Entity, &FoliageChunk, &mut Visibility)>,
+    mut foliage_chunk_query: Query<(Entity, &FoliageChunk,   &mut FoliageChunkActive )>,
 
     foliage_config_resource: Res<FoliageConfigResource>,
 ) {
+
+  
     let Some(foliage_viewer_entity) = foliage_viewer_query.get_single().ok() else {
         return;
     };
@@ -130,8 +158,8 @@ fn update_chunk_visibility(
     let Some(max_render_distance) = foliage_config.render_distance else {
         return;
     };
-
-    for (foliage_chunk_entity, _foliage_chunk, mut visibility) in foliage_chunk_query.iter_mut() {
+        
+    for (foliage_chunk_entity, _foliage_chunk,  mut chunk_active ) in foliage_chunk_query.iter_mut() {
         let Some(chunk_xform) = global_xform_query.get(foliage_chunk_entity).ok() else {
             continue;
         };
@@ -142,13 +170,58 @@ fn update_chunk_visibility(
         let chunk_center_translation = chunk_translation + chunk_dimensions / 2.0;
 
         let distance = chunk_center_translation.distance(viewer_translation);
-
+           
         if distance <= max_render_distance {
-            *visibility = Visibility::Inherited;
+         //    *visibility = Visibility::Inherited;
+             if *chunk_active != FoliageChunkActive::Activated {
+
+               
+                * chunk_active = FoliageChunkActive::Activated; 
+
+            }
+
+
         } else {
-            *visibility = Visibility::Hidden;
+            //*visibility = Visibility::Hidden;
+              if *chunk_active !=  FoliageChunkActive::Deactivated {
+
+                     
+                    * chunk_active = FoliageChunkActive::Deactivated; 
+
+              }
         }
     }
+}
+
+
+fn update_chunk_visible(
+
+
+    mut foliage_chunk_query: Query<(Entity, &FoliageChunk,   &  FoliageChunkActive, &mut Visibility ) , Changed< FoliageChunkActive> > 
+
+ ) {
+
+
+     for (_foliage_chunk_entity, _foliage_chunk,    chunk_active , mut visibility ) in foliage_chunk_query.iter_mut() { 
+
+
+        match chunk_active {
+
+            FoliageChunkActive::Activated => *visibility = Visibility::Inherited,
+
+            FoliageChunkActive::Deactivated => *visibility = Visibility::Hidden 
+
+        }
+
+
+
+
+     }
+
+
+
+
+
 }
 
 
@@ -167,16 +240,9 @@ fn handle_chunk_changed(
 
         &FoliageChunk  ,
 
-       // &FoliageLayer,
-      //  &FoliageDensityMapU8,  // this is in the foliage scene ! 
+       
 
-        &FoliageHeightMapData,
-        &FoliageDimensionsData, 
-
-
-      //  Option<&FoliageBaseHeightMapU16>,
-      //  Option<&FoliageBaseNormalMapU16>,
-    ) , Or<(  Changed<FoliageDimensionsData > , Changed<FoliageHeightMapData> ) >>, //chunks parent should have terrain data
+    ) , Or<(  Changed<FoliageDimensionsData > , Changed<FoliageHeightMapData>, Changed<FoliageChunkActive> ) >>, //chunks parent should have terrain data
 
   
 ) {
@@ -189,11 +255,11 @@ fn handle_chunk_changed(
 
     */
 
-    for (chunk_entity,  foliage_chunk, heightmap, dimensions ) in chunk_query.iter(){
+    for (chunk_entity,  _foliage_chunk  ) in chunk_query.iter(){
 
          if let Some(mut cmd) = commands.get_entity( chunk_entity ){
 
-
+            println!(" Changed<FoliageDimensionsData > , Changed<FoliageHeightMapData> ");
             cmd.insert(  ForceRebuildFoliageChunk );
          }
 
@@ -222,21 +288,14 @@ fn handle_chunk_rebuilds(
         &FoliageHeightMapData,
         &FoliageDimensionsData, 
 
+        &FoliageChunkActive, 
+
  
     ) ,    With<ForceRebuildFoliageChunk >  > , //chunks parent should have terrain data
 
 
     foliage_density_resource: Res<  FoliageDensityResource >,
-  //  foliage_scene_query:  Query< (Entity, &FoliageSceneData) >,
-
-
-    foliage_types_resource: Res<FoliageTypesResource>,
-
-    foliage_config_resource: Res<FoliageConfigResource>,
-
-  //  foliage_scene_data_resource: Res<FoliageSceneData > ,  //foliage layer data !!! 
-
-    noise_resource: Res<NoiseResource>,
+  
      
 
 ) {
@@ -244,14 +303,14 @@ fn handle_chunk_rebuilds(
 
     // delete all chunk_layer children 
 
-  
-      for (chunk_entity,  foliage_chunk, heightmap, dimensions ) in chunk_query.iter(){
+  /*
+      for (chunk_entity,  foliage_chunk, heightmap, dimensions , chunk_active  ) in chunk_query.iter(){
 
           if let Some( mut cmd ) = commands.get_entity( chunk_entity ){
  
                 cmd.despawn_descendants();
 
-
+                cmd.remove::<ForceRebuildFoliageChunk>() ;
 
 
 
@@ -261,7 +320,7 @@ fn handle_chunk_rebuilds(
           }
 
 
-      }
+      }*/
 
 
     
@@ -270,45 +329,59 @@ fn handle_chunk_rebuilds(
       //recreate them !! 
 
 
-    for (layer_index,foliage_layer_density_map) in   foliage_density_resource.0.iter() {
-
-
-
-              for (chunk_entity,  foliage_chunk, heightmap, dimensions ) in chunk_query.iter(){
-
-                 
-          
-
-
-                commands.spawn(
-
-                    (
-                        Name::new( format!("Foliage Chunk Layer {}", layer_index ) ),
-                        FoliageChunkLayer {
-                            chunk_id: foliage_chunk.chunk_id,
-                            layer_index: *layer_index 
-
-                        }  
-
-
-                        //insert density map !? 
-
-                    )
-
-
-                 ).set_parent(chunk_entity);
 
 
 
 
-                 /*  if let Some( mut cmd ) = commands.get_entity( chunk_entity ){
-                      cmd.set_parent( foliage_scene_root_entity ); 
-
-                        
-                  } */
+              for (chunk_entity,  foliage_chunk, heightmap, dimensions, chunk_active ) in chunk_query.iter(){
 
 
-              }
+                    if let Some( mut cmd ) = commands.get_entity( chunk_entity ){
+ 
+                            cmd.despawn_descendants();
+
+                            cmd.remove::<ForceRebuildFoliageChunk>() ;
+ 
+                      }
+
+
+                if  chunk_active == & FoliageChunkActive::Deactivated {continue};
+
+
+                 for (layer_index,foliage_layer_density_map) in   foliage_density_resource.0.iter() {
+
+
+                        commands.spawn(
+
+                            (
+                                Name::new( format!("Foliage Chunk Layer {}", layer_index ) ),
+                                FoliageChunkLayer {
+                                    //chunk_id: foliage_chunk.chunk_id,
+                                    layer_index: *layer_index 
+
+                                } ,
+                                Visibility::default(),
+                                Transform::default() 
+
+
+                                //insert density map !? 
+
+                            )
+
+
+                         ).set_parent(chunk_entity);
+
+
+
+
+                         /*  if let Some( mut cmd ) = commands.get_entity( chunk_entity ){
+                              cmd.set_parent( foliage_scene_root_entity ); 
+
+                                
+                          } */
+
+
+                      }
 
 
 

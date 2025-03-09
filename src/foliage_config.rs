@@ -1,3 +1,4 @@
+use crate::foliage_density::FoliageDensityResource;
 use crate::FoliageTypesResource;
 use crate::FoliageTypesManifest;
 use bevy::prelude::*;
@@ -66,27 +67,49 @@ impl Command for LoadFoliageConfig {
                     FoliageTypesManifest::load_from_file(&foliage_config.foliage_types_manifest_path)
                         .expect("Could not load foliage types manifest");
 
+                let foliage_density_data_path = foliage_config.foliage_density_data_path.clone(); 
+                let foliage_definitions = foliage_types_manifest.foliage_definitions .clone(); 
+                let foliage_dimensions = foliage_config.boundary_dimensions .clone(); 
 
 
+                //happens instantly i believe .. ? 
+                 world.insert_resource( FoliageConfigResource (foliage_config)  );
+                 world.insert_resource( FoliageTypesResource( foliage_types_manifest ) );
 
 
-                match foliage_config.foliage_density_data_path {
+               let foliage_density_resource  = match  foliage_density_data_path {
 
-                    Some(ref p) => {
+                    Some(ref full_file_path) => {
 
+
+                           match FoliageDensityResource::load_from_disk( full_file_path ) {
+
+                            Some(r) => r,
+                               None => {
+                                    warn!( "unable to load foliage density file! making a new one . " );
+                                        FoliageDensityResource::new ( foliage_dimensions,  foliage_definitions   )  
+                                }
+                            }
+
+                          
                     }
 
                     None => {
-
+                           FoliageDensityResource::new ( foliage_dimensions,  foliage_definitions   )  
 
                     }
 
-                }
+                };
+
+
+               
+                 world.insert_resource(  foliage_density_resource  );
+                 
+
              //   let foliage_density_data = ;
 
              
-                world.insert_resource( FoliageConfigResource (foliage_config)  );
-                world.insert_resource( FoliageTypesResource( foliage_types_manifest ) );
+               
         }
 }
 

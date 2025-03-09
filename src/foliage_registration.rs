@@ -13,23 +13,24 @@ pub(crate) fn foliage_registration_plugin(app: &mut App) {
 
 
     .add_systems(
-        Startup,
+        Update,
         (
            register_foliage_assets
         )
-            .chain().run_if( resource_exists ::< FoliageTypesResource > )
+            .chain().run_if( resource_added ::< FoliageTypesResource > )
             
     );
 }
 
 
+ 
 
 
 // use manifest to  do this automatically in-crate 
 fn register_foliage_assets(
     asset_server: Res<AssetServer>,
 
-    foliage_types_resource: Res<FoliageTypesResource> ,
+    foliage_types_resource: Res<FoliageTypesResource> ,  
 
     mut assets_resource: ResMut<FoliageAssetsResource>,
 
