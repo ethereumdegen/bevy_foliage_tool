@@ -105,20 +105,10 @@ pub enum FoliageCommandEvent {
  
 
 pub fn apply_command_events(
-    // asset_server: Res<AssetServer>,
-
-
-   mut  foliage_density_map: ResMut< FoliageDensityResource >,
-
-
-   // foliage_scene_query: Query<(&FoliageScene, &Name)>,
-
-  /*  foliage_layer_query: Query<(
-        &FoliageLayer,
-        &FoliageDensityMapU8,
     
-    )>,  */
 
+      foliage_density_map: Res < FoliageDensityResource >,
+ 
     foliage_config_resource: Res<FoliageConfigResource>,
 
     mut ev_reader: EventReader<FoliageCommandEvent>,
@@ -134,6 +124,24 @@ pub fn apply_command_events(
                 // let asset_folder_path = PathBuf::from("assets/");
 
                 let foliage_config = &foliage_config_resource.0;
+
+
+
+                let foliage_density_map_path = &foliage_config.foliage_density_data_path ;
+
+
+
+                /*
+                        Need to save the density maps hashmap as a binary  ! 
+                */
+
+                if let Some( path) = foliage_density_map_path {
+
+                       let saved =   foliage_density_map .save_to_disk(  path );
+
+
+                       info!(  "Saved foliage density data {:?}" , saved  );
+                   }
 
 
 /*

@@ -3,7 +3,7 @@ name = "bevy_foliage_tool"
 description = "A configurable foliage painting system using perlin noise, grayscale maps, and chunked visibility"
  
  
-version = "0.15.8"
+version = "0.15.9"
  
  
 edition = "2021"

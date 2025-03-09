@@ -82,16 +82,7 @@ impl FoliageDensityMapU8 {
 #[derive(Clone,Debug,Resource,Serialize,Deserialize)]
 pub struct FoliageDensityResource  ( pub  HashMap<usize,FoliageDensityMapU8 >) ; 
  
-
-
-/// A serializeable struct that can be cached on disk as a file
-/// and it describes all of the foliage layers for an entire scene or level
-/// where each foliage layer has a density map, y_offset map, mesh handle and material handle  
-/* #[derive(Component, Clone, Debug, Serialize, Deserialize, Default )]
-pub struct FoliageSceneData {
-  //  pub foliage_scene_name: String,
-    pub foliage_layers: HashMap<usize,FoliageDensityMapU8 >,
-} */
+ 
 
 impl FoliageDensityResource {
     pub fn new( layer_dimension: IVec2,  foliage_definitions: Vec<FoliageDefinition> ) -> Self {
@@ -109,21 +100,7 @@ impl FoliageDensityResource {
 
         Self  ( new_hashmap )
     }
-
-      /*pub fn create_or_load(foliage_data_files_path: &str, scene_name: &str) -> Self {
-
-        let full_file_path = format!("{}{}", foliage_data_files_path , scene_name);
-
-        let load_from_disk_result = Self::load_from_disk( &full_file_path  );
-
-        //	 	info!("foliage load_from_disk_result {:?}",load_from_disk_result);
-
-        match load_from_disk_result {
-            Some(loaded) => loaded,
-
-            None => Self::new( ),
-        }
-    }*/
+ 
 
      pub fn save_to_disk(&self, full_file_path: &str) -> Result<(), String> {
        // let scene_name = self.foliage_scene_name.clone();
