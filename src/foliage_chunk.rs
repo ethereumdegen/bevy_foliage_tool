@@ -43,7 +43,7 @@ pub(crate) fn foliage_chunks_plugin(app: &mut App) {
          update_chunk_visible  
 
 
-         ).chain()  ) ;
+         ).chain() .run_if( any_with_component::<FoliageRoot> ) ) ;
 
        app.add_systems(
          PostUpdate,
@@ -53,7 +53,7 @@ pub(crate) fn foliage_chunks_plugin(app: &mut App) {
         handle_chunk_rebuilds, 
 
 
-         ).chain()   );
+         ).chain().run_if( any_with_component::<FoliageRoot> )     );
 
 }
 
