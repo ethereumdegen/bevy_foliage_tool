@@ -298,7 +298,7 @@ fn vertex(vertex: Vertex) -> VertexOutput {
 
           let fog_cloud_time_base = ( globals.time   * 0.01 )   % 1.0 ;
 
-          let fog_cloud_world_pos_offset = vec2<f32>( world_position.x  , world_position.z  ) * 0.01 ;
+          let fog_cloud_world_pos_offset = vec2<f32>( abs(world_position.x ) , abs(world_position.z )  ) * 0.01 ;
           let fog_cloud_scroll =  vec2<f32>( fog_cloud_time_base  ,  fog_cloud_time_base  )  ;
 
             //aso need sine wave time shit on this uv input 
