@@ -1,7 +1,9 @@
  
-use crate::foliage_density::FoliageDensityResource;
  
-use crate::FoliageConfigResource;
+ 
+use crate::foliage_scene::{FoliageRoot, FoliageScene};
+use crate::foliage_density::FoliageDensityMapsComponent;
+//use crate::FoliageConfigResource;
 use std::fs::File;
 use std::io::BufWriter;
 use std::ops::{Add, Div, Neg};
@@ -23,7 +25,7 @@ use core::fmt::{self, Display, Formatter};
 use bevy::utils::HashMap;
 
 //use crate::foliage::{FoliageDataEvent,    FoliageData    };
-use crate::foliage_config::FoliageConfig;
+ 
 
 use anyhow::{Context, Result};
 
@@ -42,7 +44,7 @@ pub(crate) fn bevy_foliage_edits_plugin(app: &mut App) {
 
       .add_systems(Update, 
 
-        (apply_tool_edits, apply_command_events).chain().run_if( resource_exists:: < FoliageDensityResource > )
+        (apply_tool_edits, apply_command_events).chain() 
 
 
 
@@ -106,10 +108,10 @@ pub enum FoliageCommandEvent {
 
 pub fn apply_command_events(
     
-
-      foliage_density_map: Res < FoliageDensityResource >,
+     foliage_root_query: Query< (  &FoliageRoot,&FoliageScene,  &FoliageDensityMapsComponent ) >,
+    //  foliage_density_map: Res < FoliageDensityResource >,
  
-    foliage_config_resource: Res<FoliageConfigResource>,
+    //foliage_config_resource: Res<FoliageConfigResource>,
 
     mut ev_reader: EventReader<FoliageCommandEvent>,
 ) {
@@ -123,11 +125,14 @@ pub fn apply_command_events(
                 //let file_name = format!("{}.png", chunk.chunk_id);
                 // let asset_folder_path = PathBuf::from("assets/");
 
-                let foliage_config = &foliage_config_resource.0;
+
+
+            for (foliage_root, foliage_scene_data, foliage_density_map  )   in foliage_root_query .iter(){
+               // let foliage_config = &foliage_config_resource.0;
 
 
 
-                let foliage_density_map_path = &foliage_config.foliage_density_data_path ;
+                let foliage_density_map_path = &foliage_scene_data.foliage_density_data_path ;
 
 
 
@@ -143,55 +148,8 @@ pub fn apply_command_events(
                        info!(  "Saved foliage density data {:?}" , saved  );
                    }
 
-
-/*
-
-                let foliage_data_files_path = &foliage_config.foliage_data_files_path;
-
-                for (foliage_scene, foliage_scene_name) in foliage_scene_query.iter() {
-                    //let foliage_scene_name = foliage_scene.foliage_scene_name.clone();
-                    let mut layers_data_map = HashMap::new();
-
-                    let foliage_layer_entities_map = &foliage_scene.foliage_layer_entities_map;
-
-                    for (layer_index, layer_entity) in foliage_layer_entities_map.iter() {
-                        if let Some((foliage_layer, density_data, height_data,normal_data)) =
-                            foliage_layer_query.get(*layer_entity).ok()
-                        {
-                            layers_data_map.insert(
-                                //foliage_layer.foliage_index,
-                                *layer_index,
-                                FoliageLayerData {
-                                    foliage_index: *layer_index,
-                                    density_map: density_data.clone(),
-                                  //  base_height_map: height_data.cloned(),
-                                  //  base_normal_map: normal_data.cloned(),
-                                },
-                            );
-
-
-                        }
-                    }
-
-                    let foliage_scene_data = FoliageSceneData {
-                        foliage_scene_name: foliage_scene_name.to_string(), // so we can rename it !
-                        foliage_layers: layers_data_map,
-                    };
-
-                    //for now
-                    //let save_result = foliage_scene_data.save_to_disk(foliage_data_files_path);
-
-                   /* info!(
-                        "saving foliage {:?} {} {}",
-                        save_result, foliage_data_files_path, foliage_scene_name
-                    );
-
-                    if let Err(error) = save_result {
-                        warn!(error);
-                    }*/
                 }
-*/
-
+ 
 
             }
         }
@@ -201,7 +159,7 @@ pub fn apply_command_events(
 }
 
 pub fn apply_tool_edits(
-    mut  foliage_density_map: ResMut< FoliageDensityResource >,
+    //mut  foliage_density_map: ResMut< FoliageDensityResource >,
 
  /*   mut foliage_layer_query: Query<(
         &FoliageLayer,
@@ -210,7 +168,10 @@ pub fn apply_tool_edits(
     )>, //chunks parent should have terrain data
 */
 
-    foliage_config_resource: Res<FoliageConfigResource>,
+    //foliage_config_resource: Res<FoliageConfigResource>,
+
+
+     mut foliage_root_query: Query< (  &FoliageRoot,&FoliageScene,  &mut FoliageDensityMapsComponent ) >,
 
     mut ev_reader: EventReader<EditFoliageEvent>,
     mut evt_writer: EventWriter<FoliageBrushEvent>,
@@ -224,9 +185,16 @@ pub fn apply_tool_edits(
        
         let tool_coords_local = tool_coords;
 
-        let foliage_config = &foliage_config_resource.0;
 
-        let foliage_dimensions = &foliage_config.boundary_dimensions;
+
+        let Ok( (foliage_root, foliage_scene, mut foliage_density_map ) ) = foliage_root_query.get_single_mut() else {
+            warn!("no single foliage root found ");
+            continue ; 
+        };
+
+      //  let foliage_config = &foliage_config_resource.0;
+
+        let foliage_dimensions = &foliage_scene.boundary_dimensions;
 
       
         match &ev.tool {

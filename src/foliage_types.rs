@@ -7,10 +7,10 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Resource)]
-pub struct FoliageTypesResource(pub FoliageTypesManifest);
+//#[derive(Resource)]
+//pub struct FoliageTypesResource(pub FoliageTypesManifest);
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Component )]
 pub struct FoliageTypesManifest {
     pub foliage_definitions: Vec<FoliageDefinition>,
     pub foliage_mesh_definitions: HashMap<String,String> ,

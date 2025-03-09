@@ -1,7 +1,10 @@
+use crate::foliage_scene::FoliageRoot;
+use crate::foliage_scene::FoliageScene;
 use crate::foliage_types::FoliageMaterialPreset;
-use crate::FoliageTypesResource;
+ 
 use crate::foliage_material::FoliageMaterialExtension;
 use crate::foliage_assets::FoliageMaterialHandle;
+use crate::foliage_types::FoliageTypesManifest;
 use bevy::prelude::*;
 
 
@@ -15,9 +18,9 @@ pub(crate) fn foliage_registration_plugin(app: &mut App) {
     .add_systems(
         Update,
         (
-           register_foliage_assets
+           register_foliage_assets.run_if( any_with_component::<FoliageTypesManifest>  )
         )
-            .chain().run_if( resource_added ::< FoliageTypesResource > )
+            .chain() 
             
     );
 }
@@ -30,7 +33,10 @@ pub(crate) fn foliage_registration_plugin(app: &mut App) {
 fn register_foliage_assets(
     asset_server: Res<AssetServer>,
 
-    foliage_types_resource: Res<FoliageTypesResource> ,  
+  
+    foliage_root_query: Query< (  &FoliageRoot,&FoliageScene,  &  FoliageTypesManifest ) , Added< FoliageTypesManifest >  >,
+
+
 
     mut assets_resource: ResMut<FoliageAssetsResource>,
 
@@ -38,7 +44,15 @@ fn register_foliage_assets(
 ) {
 
 
-	let foliage_material_definitions_array = &foliage_types_resource.0.foliage_material_definitions ;
+
+      let Ok( (foliage_root, foliage_scene,  foliage_types ) ) = foliage_root_query.get_single () else {
+           
+            return  ; 
+        };
+
+
+
+	let foliage_material_definitions_array = &foliage_types.foliage_material_definitions ;
 
 
 	for (mat_name,  mat_def) in foliage_material_definitions_array {
@@ -103,7 +117,7 @@ fn register_foliage_assets(
 	}
 
 
-	for (mesh_name, mesh_path) in &foliage_types_resource.0.foliage_mesh_definitions {
+	for (mesh_name, mesh_path) in &foliage_types.foliage_mesh_definitions {
 
 
         info!("register foliage mesh {}", mesh_name );

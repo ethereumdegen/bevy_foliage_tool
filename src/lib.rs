@@ -1,10 +1,10 @@
 use crate::foliage_assets::FoliageAssetsResource;
-use crate::foliage_config::FoliageConfig;
+ 
 use crate::foliage_types::FoliageTypesManifest;
-use crate::foliage_types::FoliageTypesResource;
+ 
 use bevy::{asset::load_internal_asset, prelude::*};
 use edit::bevy_foliage_edits_plugin;
-use foliage_config::FoliageConfigResource;
+ 
 
 //use crate::chunk::TerrainMaterialExtension;
 
@@ -12,7 +12,7 @@ pub mod edit;
 //pub mod foliage;
 pub mod foliage_chunk;
 
-pub mod foliage_config;
+pub mod foliage_scene;
 
 pub mod foliage_chunk_layer;
 

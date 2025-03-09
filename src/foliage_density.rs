@@ -1,9 +1,9 @@
 use crate::foliage_chunk::ForceRebuildFoliageChunk;
 use crate::foliage_chunk::FoliageChunk;
-use crate::foliage_config::FoliageConfigResource;
+ 
 use crate::foliage_types::FoliageDefinition;
 //use crate::foliage_layer::{FoliageDensityMapU8, FoliageLayerData};
-use crate::FoliageTypesResource;
+ 
 
 //use crate::foliage_layer::FoliageLayer;
 use bevy::prelude::*;
@@ -16,9 +16,10 @@ use serde::{Deserialize, Serialize};
 
 pub(crate) fn foliage_density_plugin(app: &mut App) {
     app
-      //  .init_resource::<FoliageSceneData>()
+  
 
-     .add_systems(Update, handle_foliage_density_resource_changed .run_if( resource_exists_and_changed::<FoliageDensityResource> ))
+
+     .add_systems(Update, handle_foliage_density_resource_changed  )
 
 
    ;
@@ -79,12 +80,13 @@ impl FoliageDensityMapU8 {
 
  
 //contains a  foliage density map for each layer 
-#[derive(Clone,Debug,Resource,Serialize,Deserialize)]
-pub struct FoliageDensityResource  ( pub  HashMap<usize,FoliageDensityMapU8 >) ; 
- 
+//#[derive(Clone,Debug,Resource,Serialize,Deserialize)]
+//pub struct FoliageDensityResource  ( pub  HashMap<usize,FoliageDensityMapU8 >) ; 
+ #[derive(Clone,Debug,Component,Serialize,Deserialize)]
+ pub struct FoliageDensityMapsComponent( pub HashMap <  usize , FoliageDensityMapU8 > );
  
 
-impl FoliageDensityResource {
+impl FoliageDensityMapsComponent {
     pub fn new( layer_dimension: IVec2,  foliage_definitions: Vec<FoliageDefinition> ) -> Self {
        
 
@@ -100,7 +102,7 @@ impl FoliageDensityResource {
 
         Self  ( new_hashmap )
     }
- 
+   
 
      pub fn save_to_disk(&self, full_file_path: &str) -> Result<(), String> {
        // let scene_name = self.foliage_scene_name.clone();
@@ -129,6 +131,38 @@ impl FoliageDensityResource {
             }
             Err(e) => Err(format!("Failed to create file: {}", e)),
         }
+    }   
+
+
+     pub fn create_or_load(  full_file_path:  Option<String> ,foliage_dimensions: IVec2, foliage_definitions: Vec<FoliageDefinition> ) -> Self {
+
+
+              match  full_file_path {
+
+                    Some(ref full_file_path) => {
+
+
+                           match FoliageDensityMapsComponent::load_from_disk( full_file_path ) {
+
+                            Some(r) => r,
+                               None => {
+                                    warn!( "unable to load foliage density file! making a new one . " );
+                                        FoliageDensityMapsComponent::new ( foliage_dimensions,  foliage_definitions   )  
+                                }
+                            }
+
+                          
+                    }
+
+                    None => {
+                           FoliageDensityMapsComponent::new ( foliage_dimensions,  foliage_definitions   )  
+
+                    }
+
+                } 
+
+
+
     }
 
     // This function loads the FoliageSceneData from disk
@@ -196,7 +230,7 @@ impl Command for CreateOrLoadFoliageDensityMap {
 }
 */
 
-
+/*
 pub struct SaveFoliageDensityMap {
 
     pub path:String 
@@ -208,7 +242,7 @@ impl Command for SaveFoliageDensityMap {
 
         fn apply(self, world: &mut World) { 
 
-            let foliage_density_resource = world.get_resource::<FoliageDensityResource>();
+          //  let foliage_density_resource = world.get_resource::<FoliageDensityResource>();
 
          //    let mut foliage_scene_query = world.query::< ( &Name, & FoliageSceneData  ) >();
 
@@ -223,21 +257,23 @@ impl Command for SaveFoliageDensityMap {
         }
 
 }
-
+*/
 
 
     // changes like from painting the density ! ! 
 fn handle_foliage_density_resource_changed (
     mut commands: Commands,
 
-    foliage_density_resource: Res<FoliageDensityResource>,
+   // foliage_density_resource: Res<FoliageDensityResource>,
+
+   foliage_density_maps_query: Query < (&FoliageDensityMapsComponent ) , Changed<FoliageDensityMapsComponent>  >,
 
   
     foliage_chunk_query: Query< (  Entity, & FoliageChunk  ) >
  
 ) {
 
-    
+    for  foliage_density_map in foliage_density_maps_query.iter() {
    
         for (chunk_entity, _chunk) in foliage_chunk_query.iter(){ 
 
@@ -248,7 +284,7 @@ fn handle_foliage_density_resource_changed (
         }
 
    
-
+   }
 
 }
 
