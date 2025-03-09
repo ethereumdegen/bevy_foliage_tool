@@ -1,3 +1,5 @@
+use crate::foliage_material;
+use crate::foliage_material::FoliageMaterial;
 use crate::foliage_scene::FoliageRoot;
 use crate::foliage_scene::FoliageScene;
 use crate::foliage_types::FoliageMaterialPreset;
@@ -102,11 +104,20 @@ fn register_foliage_assets(
 			FoliageMaterialPreset::Foliage => {
 
 
+                let fog_cloud_texture =  asset_server.load("embedded://bevy_foliage_tool/internal_assets/fog_noise.png"); 
+
+                let foliage_material = FoliageMaterial {
+
+                    fog_cloud_texture: Some( fog_cloud_texture )
+
+                };
+
+
 				   assets_resource.register_foliage_material(
 			       mat_name,
 			        FoliageMaterialHandle::Extended(asset_server.add( FoliageMaterialExtension {  
 			        	base : standard_material,
-			        	..default() 
+			        	extension: foliage_material, 
 			         }  )),
 
 

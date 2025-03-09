@@ -1,5 +1,5 @@
 use bevy::{asset::load_internal_asset, prelude::*};
-
+use bevy::asset::embedded_asset;
 use bevy::asset::VisitAssetDependencies;
 
 use bevy::reflect::TypePath;
@@ -26,11 +26,24 @@ pub fn foliage_material_plugin(app: &mut App) {
         Shader::from_wgsl
     );
 
+
+
+      embedded_asset!(app, "src/", "internal_assets/fog_noise.png" );
+       
+
+
     app.add_plugins(MaterialPlugin::<FoliageMaterialExtension>::default());
 }
 
-#[derive(Asset, AsBindGroup, TypePath, Clone, Debug, Default)]
+#[derive(Asset, AsBindGroup, TypePath, Clone, Debug )]
 pub struct FoliageMaterial {
+
+
+
+    #[texture(20)]
+    #[sampler(21)]
+    pub fog_cloud_texture: Option<Handle<Image>>,
+
     
 }
  

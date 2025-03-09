@@ -91,6 +91,9 @@
 
  
 
+@group(2) @binding(20) var fog_cloud_noise: texture_2d<f32>;
+@group(2) @binding(21) var fog_cloud_noise_sampler: sampler;
+
 
   
 
@@ -281,23 +284,43 @@ fn vertex(vertex: Vertex) -> VertexOutput {
 
 
 
-         //use this along with a time offset to sample the fog noise map (uv)  to simulate darkening due to clouds above  !
-
-         let world_position = in.world_position; 
-
-
-  
-
-        
-
-
-
-
-
          //manual alpha mask 
           if  ( blended_color.a < 0.2 ) {
           discard;
          }
+
+
+
+
+         //use this along with a time offset to sample the fog noise map (uv)  to simulate darkening due to clouds above  !
+
+         let world_position = in.world_position; 
+
+          let fog_cloud_time_base = ( globals.time   * 0.01 )   % 1.0 ;
+
+          let fog_cloud_world_pos_offset = vec2<f32>( world_position.x  , world_position.z  ) * 0.01 ;
+          let fog_cloud_scroll =  vec2<f32>( fog_cloud_time_base  ,  fog_cloud_time_base  )  ;
+
+            //aso need sine wave time shit on this uv input 
+        var  fog_cloud_noise_uv = fog_cloud_world_pos_offset + fog_cloud_scroll ; 
+        
+         fog_cloud_noise_uv.x = fog_cloud_noise_uv.x % 1.0;  
+         fog_cloud_noise_uv.y = fog_cloud_noise_uv.y % 1.0;  
+
+        let fog_cloud_sample = textureSample(fog_cloud_noise, fog_cloud_noise_sampler, fog_cloud_noise_uv)  ;
+
+
+      //  let fog_cloud_output = fog_cloud_sample.r;
+         let highlight_color = vec4<f32>(1.0, 1.0, 1.0, 1.0);
+         let shadow_color = vec4<f32>(0.25,0.25,0.25, 1.0);
+      
+         
+
+        let fog_cloud_color = mix(shadow_color, highlight_color, fog_cloud_sample.r  );
+
+        blended_color = blended_color * fog_cloud_color; 
+        
+
 
 
         
@@ -334,9 +357,8 @@ fn vertex(vertex: Vertex) -> VertexOutput {
        
       
         
-        return   final_color;
-
-
+             return   final_color;
+        
        
     }
 
