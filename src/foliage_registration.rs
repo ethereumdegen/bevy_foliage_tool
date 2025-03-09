@@ -71,7 +71,13 @@ fn register_foliage_assets(
              base_color_texture:  base_color_texture_handle_opt ,
             //double_sided: true ,
             cull_mode: None,
-             unlit: true,
+            
+            unlit: true,
+            fog_enabled: true , 
+
+          //   //  need for fog ?
+          
+
             double_sided: true,
            // depth_bias
            alpha_mode: AlphaMode::Mask(0.2), 

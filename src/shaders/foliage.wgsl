@@ -6,12 +6,15 @@
  // https://github.com/mikeam565/first-game/blob/main/assets/shaders/grass_shader.wgsl
 
 
-#import bevy_pbr::mesh_functions::{mesh_position_local_to_clip, get_world_from_local}
+#import bevy_pbr::mesh_functions::{mesh_position_local_to_clip, get_world_from_local , mesh_position_local_to_world}
  
  #import bevy_pbr::{
     
       mesh_view_bindings::view,
         mesh_view_bindings::globals,
+
+        mesh_view_bindings as view_bindings,
+
          
       pbr_bindings,
       pbr_types,
@@ -19,10 +22,9 @@
 
     pbr_fragment::pbr_input_from_standard_material,
       pbr_functions::{ 
-      prepare_world_normal,
-      apply_normal_mapping,
-      calculate_view
-
+          prepare_world_normal,
+          apply_normal_mapping,
+          calculate_view 
       },
     // we can optionally modify the lit color before post-processing is applied
     pbr_types::{STANDARD_MATERIAL_FLAGS_DOUBLE_SIDED_BIT,STANDARD_MATERIAL_FLAGS_UNLIT_BIT},
@@ -38,8 +40,8 @@
 }
 #else
 #import bevy_pbr::{
-    forward_io::{ FragmentOutput},
-    pbr_functions::{apply_pbr_lighting, main_pass_post_lighting_processing, alpha_discard},
+    forward_io::{VertexOutput,  FragmentOutput},
+    pbr_functions::{apply_pbr_lighting, main_pass_post_lighting_processing, apply_fog,  alpha_discard},
 }
 #endif
 
@@ -151,7 +153,7 @@ struct Vertex {
 };
 
 
-
+/*
 // could use the default  and toggle IFDEF ? 
 struct VertexOutput {
     // This is `clip position` when the struct is used as a vertex stage output
@@ -162,7 +164,7 @@ struct VertexOutput {
     @location(2) uv: vec2<f32>, 
     @location(5) color: vec4<f32>, 
 }
-
+*/
 
 
 @vertex
@@ -181,9 +183,16 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     local_psn_output.y = vertex.position.y * (1.0 + sin(  time_base +  vertex.position.x) *  0.20); 
     local_psn_output.x = vertex.position.x * (1.0 + cos(  time_base +  vertex.position.y) *  0.10 * vertex.position.y); 
 
+    //very important that we do this ! 
+    out.world_position  =   mesh_position_local_to_world( 
+        get_world_from_local(vertex.instance_index),   //  mat4x4<f32>
+        vec4<f32>(local_psn_output, 1.0)   // vertex position 
+        );
+
+
     out.position = mesh_position_local_to_clip(
-        get_world_from_local(vertex.instance_index),
-        vec4<f32>(local_psn_output, 1.0),
+        get_world_from_local(vertex.instance_index), //  mat4x4<f32>
+        vec4<f32>(local_psn_output, 1.0),  // vertex position 
     );
 
 
@@ -191,7 +200,7 @@ fn vertex(vertex: Vertex) -> VertexOutput {
   
         //define vertex color based on height  but not in prepass! 
 
-    out.color =  mix( vec4<f32>(0.6,0.6,0.6,1.0),  vec4<f32>(1.0,1.0,1.0,1.0) , local_psn_output.y  ) ;
+  //  out.color =  mix( vec4<f32>(0.6,0.6,0.6,1.0),  vec4<f32>(1.0,1.0,1.0,1.0) , local_psn_output.y  ) ;
    
    
     //out.position = vertex.position;
@@ -235,19 +244,24 @@ fn vertex(vertex: Vertex) -> VertexOutput {
 
         
      
-        let vertex_color = in.color;
-         
-
 
         let uv_transform = pbr_bindings::material.uv_transform; 
         var uv = (uv_transform * vec3(in.uv, 1.0)).xy;
      
+            
+            // for now ? 
+       let vertex_color = mix( vec4<f32>(1.0,1.0,1.0,1.0),  vec4<f32>(0.5,0.5,0.5,1.0) ,  uv.y  ) ;
+
+         
         
+        //how can i do a gradient in the vertical based on local_position !? 
+
+
 
           var bias  = view.mip_bias;
      
             // this is how you access std material stuff in an ext when using a vertex pass ! 
-         var color = pbr_bindings::material.base_color;
+         var blended_color = pbr_bindings::material.base_color;   // this is nice and green ! 
 
           
           let tex_color  = textureSample(
@@ -258,15 +272,69 @@ fn vertex(vertex: Vertex) -> VertexOutput {
             );
       
 
-        color  *= tex_color ; 
-        color  *= vertex_color; 
-         
-        //manual alpha mask 
-         if  ( color.a < 0.2 ) {
+        blended_color  *= tex_color ; 
+         blended_color  *= vertex_color; 
+
+
+
+
+
+
+
+         //use this along with a time offset to sample the fog noise map (uv)  to simulate darkening due to clouds above  !
+
+         let world_position = in.world_position; 
+
+
+  
+
+        
+
+
+
+
+
+         //manual alpha mask 
+          if  ( blended_color.a < 0.2 ) {
           discard;
          }
+
+
         
-        return  color;
+
+
+      //  var pbr_input = pbr_input_from_standard_material(in, is_front);
+          // pbr_input.material.base_color = blended_color ; // vec4<f32>(1.0, 1.0, 1.0, 1.0);
+
+
+
+            //var pbr_out: FragmentOutput; 
+           // pbr_out.color =  apply_pbr_lighting(pbr_input);  // ??? make this more efficient ? 
+          //  let lighting_average  = (pbr_out.color.r + pbr_out.color.g + pbr_out.color.b ) / 3.0 ;
+
+
+            // could do cel shader quantization here ? 
+
+ 
+
+        //     pbr_out.color =  pbr_out.color* blended_color ;
+          //  pbr_input.material.base_color = blended_color;
+
+
+        //apply atmospheric fog ! 
+        //the fog doesnt have proper falloff !? 
+    //    pbr_out.color = main_pass_post_lighting_processing(pbr_input, pbr_out.color);
+
+
+         let white_color = vec4<f32>(1.0, 1.0, 1.0, 1.0);  //use for fog ? 
+         let fog_output = apply_fog(view_bindings::fog,  blended_color , world_position.xyz, view_bindings::view.world_position.xyz);
+
+
+        let final_color =   fog_output ;          
+       
+      
+        
+        return   final_color;
 
 
        
