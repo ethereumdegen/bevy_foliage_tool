@@ -251,9 +251,13 @@ fn handle_chunk_changed(
     for (chunk_entity,  _foliage_chunk  ) in chunk_query.iter(){
 
          if let Some(mut cmd) = commands.get_entity( chunk_entity ){
-
-            println!(" Changed<FoliageDimensionsData > , Changed<FoliageHeightMapData> ");
-            cmd.insert(  ForceRebuildFoliageChunk );
+            // Only insert the component if the entity exists and is valid
+            if cmd.id() == chunk_entity {
+                info!("Inserting ForceRebuildFoliageChunk for entity {:?}", chunk_entity);
+                cmd.insert(ForceRebuildFoliageChunk);
+            } else {
+                warn!("Entity {:?} exists in query but not in world, skipping rebuild", chunk_entity);
+            }
          }
 
 
@@ -308,19 +312,28 @@ fn handle_chunk_rebuilds(
 
 
 
-              for (chunk_entity,  foliage_chunk, heightmap, dimensions, chunk_active ) in chunk_query.iter(){
-
-
-                    if let Some( mut cmd ) = commands.get_entity( chunk_entity ){
- 
+              for (chunk_entity, foliage_chunk, heightmap, dimensions, chunk_active) in chunk_query.iter() {
+                    // Check if entity still exists and is valid before proceeding
+                    if let Some(mut cmd) = commands.get_entity(chunk_entity) {
+                        // Verify entity still exists in world
+                        if cmd.id() == chunk_entity {
+                            info!("Rebuilding foliage chunk {:?}", chunk_entity);
                             cmd.despawn_descendants();
+                            cmd.remove::<ForceRebuildFoliageChunk>();
+                        } else {
+                            warn!("Entity {:?} exists in query but not in world, skipping rebuild process", chunk_entity);
+                            continue;
+                        }
+                    } else {
+                        warn!("Could not get entity {:?} for rebuild, likely already despawned", chunk_entity);
+                        continue;
+                    }
 
-                            cmd.remove::<ForceRebuildFoliageChunk>() ;
- 
-                      }
-
-
-                if  chunk_active == & FoliageChunkActive::Deactivated {continue};
+                    // Only proceed with rebuild if chunk is activated
+                    if chunk_active == &FoliageChunkActive::Deactivated {
+                        debug!("Skipping rebuild for deactivated chunk {:?}", chunk_entity);
+                        continue;
+                    }
 
 
                  for (layer_index,foliage_layer_density_map) in   foliage_density_map.0.iter() {
