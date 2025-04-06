@@ -5,7 +5,7 @@ use crate::foliage_chunk_layer::FoliageChunkLayer;
  
 
 use rand::Rng;
-use bevy::utils::HashMap ;
+use bevy::platform_support::collections::hash_map::HashMap ;
 
 use crate::foliage_proto;
 use crate::foliage_proto::FoliageProto;
@@ -250,7 +250,7 @@ fn handle_chunk_changed(
 
     for (chunk_entity,  _foliage_chunk  ) in chunk_query.iter(){
 
-         if let Some(mut cmd) = commands.get_entity( chunk_entity ){
+         if let Some(mut cmd) = commands.get_entity( chunk_entity ).ok() {
             // Only insert the component if the entity exists and is valid
             if cmd.id() == chunk_entity {
                 info!("Inserting ForceRebuildFoliageChunk for entity {:?}", chunk_entity);
@@ -314,11 +314,11 @@ fn handle_chunk_rebuilds(
 
               for (chunk_entity, foliage_chunk, heightmap, dimensions, chunk_active) in chunk_query.iter() {
                     // Check if entity still exists and is valid before proceeding
-                    if let Some(mut cmd) = commands.get_entity(chunk_entity) {
+                    if let Some(mut cmd) = commands.get_entity(chunk_entity) .ok() {
                         // Verify entity still exists in world
                         if cmd.id() == chunk_entity {
                             info!("Rebuilding foliage chunk {:?}", chunk_entity);
-                            cmd.despawn_descendants();
+                            cmd.despawn_related::<Children>();
                             cmd.remove::<ForceRebuildFoliageChunk>();
                         } else {
                             warn!("Entity {:?} exists in query but not in world, skipping rebuild process", chunk_entity);

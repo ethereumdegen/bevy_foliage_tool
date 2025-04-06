@@ -125,7 +125,7 @@ impl Command for DespawnFoliageScene {
 
               for foliage_root_entity in foliage_root_query.iter(world).collect::<Vec<_>>() {
 
-                  if let Some(mut cmd) = world.commands().get_entity( foliage_root_entity ){
+                  if let Some(mut cmd) = world.commands().get_entity( foliage_root_entity ).ok() {
                          cmd.despawn_recursive();
                   }
 

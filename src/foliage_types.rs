@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy::utils::HashMap ;
+use bevy::platform_support::collections::hash_map::HashMap ;
 
 use std::fs::File;
 use std::io::Read;

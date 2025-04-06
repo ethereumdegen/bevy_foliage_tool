@@ -22,7 +22,7 @@ use bevy::prelude::*;
 
 use core::fmt::{self, Display, Formatter};
 
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::hash_map::HashMap;
 
 //use crate::foliage::{FoliageDataEvent,    FoliageData    };
  

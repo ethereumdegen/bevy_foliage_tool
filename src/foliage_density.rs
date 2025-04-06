@@ -11,7 +11,7 @@ use std::fs::{create_dir_all, File};
 use std::io::{Read, Write};
 use std::path::Path;
 
-use bevy::utils::HashMap;
+use  bevy::platform_support::collections::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn foliage_density_plugin(app: &mut App) {
@@ -88,9 +88,9 @@ impl FoliageDensityMapU8 {
 
 impl FoliageDensityMapsComponent {
     pub fn new( layer_dimension: IVec2,  foliage_definitions: Vec<FoliageDefinition> ) -> Self {
-       
+      
 
-        let mut new_hashmap = HashMap::new();
+        let mut new_hashmap = HashMap::with_hasher(Default::default());
 
 
         for (layer_index, _def) in foliage_definitions.iter().enumerate() {
@@ -277,7 +277,7 @@ fn handle_foliage_density_resource_changed (
    
         for (chunk_entity, _chunk) in foliage_chunk_query.iter(){ 
 
-            if let Some(mut cmd) = commands.get_entity( chunk_entity ){
+            if let Some(mut cmd) = commands.get_entity( chunk_entity ).ok() {
 
                 cmd.insert( ForceRebuildFoliageChunk  );
             }

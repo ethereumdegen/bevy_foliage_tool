@@ -1,3 +1,4 @@
+use bevy::ecs::relationship::Relationship;
 use crate::foliage_scene::FoliageRoot;
 use crate::foliage_scene::FoliageScene;
 use crate::foliage_density::FoliageDensityMapsComponent;
@@ -14,7 +15,7 @@ use crate::foliage_chunk::{FoliageChunk, FoliageChunkNeedsRebuild};
  
 use bevy::prelude::*;
 
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn foliage_chunk_layer_plugin(app: &mut App) {
@@ -49,7 +50,7 @@ fn build_chunk_layers (
 
 
     //parent must be a foliage chunk! 
-        chunk_layer_query: Query  < ( Entity, &FoliageChunkLayer  , &Parent  ) , Added< FoliageChunkLayer > >,
+        chunk_layer_query: Query  < ( Entity, &FoliageChunkLayer  , &ChildOf  ) , Added< FoliageChunkLayer > >,
 
         chunk_query: Query< ( &FoliageChunk, &FoliageHeightMapData, &FoliageDimensionsData ) > ,
  
@@ -297,12 +298,17 @@ fn get_foliage_node_spawn_using_noise(
         // Scale density to 0.0-1.0 range
           let density_scaled =  density_at_point as f32   / max_chunk_density ;
 
+
+          let Some( noise_texture_data )  = &noise_texture.data else {
+            return None ;
+          }  ;
+
    //  let density_scaled = 0.9 ; 
         
         // Sample noise texture for this position
         // This calculation may need adjustment based on your texture coordinates
-        let noise_tex_data_index = (y * 256 + x) as usize % noise_texture.data.len();
-        let noise_sample_at_point = noise_texture.data[noise_tex_data_index];
+        let noise_tex_data_index = (y * 256 + x) as usize % noise_texture_data.len();
+        let noise_sample_at_point = noise_texture_data[noise_tex_data_index];
         let noise_sample_scaled = noise_sample_at_point as f32 / max_noise_value;
         
         // Skip if density is less than noise (for natural distribution)
@@ -314,9 +320,9 @@ fn get_foliage_node_spawn_using_noise(
         
         // Generate random offsets for natural variation
         let mut rng = rand::thread_rng();
-        let random_float_x: f32 = rng.gen::<f32>() - 0.5;
-        let random_float_y: f32 = rng.gen::<f32>() - 0.5; // for rotation in radians
-        let random_float_z: f32 = rng.gen::<f32>() - 0.5;
+        let random_float_x: f32 = rng.r#gen::<f32>() - 0.5;
+        let random_float_y: f32 = rng.r#gen::<f32>() - 0.5; // for rotation in radians
+        let random_float_z: f32 = rng.r#gen::<f32>() - 0.5;
         
         // Calculate foliage position with some noise-based offset
         let foliage_offset = Vec3::new(
