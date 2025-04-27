@@ -15,7 +15,7 @@ use crate::foliage_chunk::{FoliageChunk, FoliageChunkNeedsRebuild};
  
 use bevy::prelude::*;
 
-use bevy::platform_support::collections::hash_map::HashMap;
+use bevy::platform::collections::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn foliage_chunk_layer_plugin(app: &mut App) {

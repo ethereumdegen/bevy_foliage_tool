@@ -17,7 +17,7 @@ keywords = [ "foliage" , "bevy" ]
 
 [dependencies]
 anyhow = "1.0.75"
-bevy = "0.16.0-rc.2"
+bevy = "0.16.0"
 
 futures-lite = "1.13.0"
 image = "0.25.1" 

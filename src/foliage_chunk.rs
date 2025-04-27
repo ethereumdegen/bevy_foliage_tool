@@ -5,7 +5,7 @@ use crate::foliage_chunk_layer::FoliageChunkLayer;
  
 
 use rand::Rng;
-use bevy::platform_support::collections::hash_map::HashMap ;
+use bevy::platform::collections::hash_map::HashMap ;
 
 use crate::foliage_proto;
 use crate::foliage_proto::FoliageProto;

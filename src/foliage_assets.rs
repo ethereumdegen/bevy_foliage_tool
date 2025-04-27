@@ -2,7 +2,7 @@ use crate::foliage_material::FoliageMaterialExtension;
 use std::default;
 
 use bevy::prelude::*;
-use bevy::platform_support::collections::hash_map::HashMap;
+use bevy::platform::collections::hash_map::HashMap;
 
 pub(crate) fn foliage_assets_plugin(app: &mut App) {
     app.init_state::<FoliageAssetsState>()

@@ -11,7 +11,7 @@ use std::fs::{create_dir_all, File};
 use std::io::{Read, Write};
 use std::path::Path;
 
-use  bevy::platform_support::collections::hash_map::HashMap;
+use  bevy::platform::collections::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn foliage_density_plugin(app: &mut App) {
