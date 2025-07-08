@@ -252,12 +252,15 @@ fn handle_chunk_changed(
 
          if let Some(mut cmd) = commands.get_entity( chunk_entity ).ok() {
             // Only insert the component if the entity exists and is valid
+
+            cmd.try_insert(ForceRebuildFoliageChunk);
+            /*
             if cmd.id() == chunk_entity {
                 info!("Inserting ForceRebuildFoliageChunk for entity {:?}", chunk_entity);
-                cmd.insert(ForceRebuildFoliageChunk);
+                cmd.try_insert(ForceRebuildFoliageChunk);
             } else {
                 warn!("Entity {:?} exists in query but not in world, skipping rebuild", chunk_entity);
-            }
+            } */
          }
 
 
