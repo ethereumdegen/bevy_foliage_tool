@@ -867,7 +867,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_foliage_tool"
-version = "0.16.0"
+version = "0.16.1"
 dependencies = [
  "anyhow",
  "bevy 0.16.0",
