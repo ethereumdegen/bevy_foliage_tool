@@ -350,10 +350,22 @@ fn vertex(vertex: Vertex) -> VertexOutput {
 
 
          let white_color = vec4<f32>(1.0, 1.0, 1.0, 1.0);  //use for fog ? 
+
+
+
+      #ifdef DISTANCE_FOG
          let fog_output = apply_fog(view_bindings::fog,  blended_color , world_position.xyz, view_bindings::view.world_position.xyz);
 
 
-        let final_color =   fog_output ;          
+        let final_color =   fog_output ;    
+
+        #else 
+
+         let final_color =   blended_color ;    
+
+
+
+       #endif    
        
       
         
