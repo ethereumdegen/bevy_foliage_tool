@@ -308,6 +308,9 @@ fn get_foliage_node_spawn_using_noise(
         // Sample noise texture for this position
         // This calculation may need adjustment based on your texture coordinates
         let noise_tex_data_index = (y * 256 + x) as usize % noise_texture_data.len();
+      
+
+
         let noise_sample_at_point = noise_texture_data[noise_tex_data_index];
         let noise_sample_scaled = noise_sample_at_point as f32 / max_noise_value;
         
@@ -319,17 +322,17 @@ fn get_foliage_node_spawn_using_noise(
         }
         
         // Generate random offsets for natural variation
-        let mut rng = rand::thread_rng();
-        let random_float_x: f32 = rng.r#gen::<f32>() - 0.5;
-        let random_float_y: f32 = rng.r#gen::<f32>() - 0.5; // for rotation in radians
-        let random_float_z: f32 = rng.r#gen::<f32>() - 0.5;
+       // let mut rng = rand::thread_rng();
+       // let random_float_x: f32 = rng.r#gen::<f32>() - 0.5;
+       // let random_float_y: f32 = rng.r#gen::<f32>() - 0.5; // for rotation in radians
+       // let random_float_z: f32 = rng.r#gen::<f32>() - 0.5;
         
         // Calculate foliage position with some noise-based offset
-        let foliage_offset = Vec3::new(
+        /*let foliage_offset = Vec3::new(
             noise_sample_scaled, 
             0.0, 
             1.0 - noise_sample_scaled
-        ) * 2.0;
+        ) * 2.0; */ 
         
         // Calculate final translation
         let foliage_translation = Vec3::new(
@@ -337,9 +340,16 @@ fn get_foliage_node_spawn_using_noise(
             height_at_point as f32 * height_scale,
             y as f32 , // + foliage_offset.z + random_float_z,
         );
-        
+            
+
+            /*
+            Trees: Higher slope_scale_factor (2.0-5.0) for more upright growth
+        Grass: Lower slope_scale_factor (0.5-1.0) to follow terrain closely
+        Bushes: Medium slope_scale_factor (1.0-2.0) for balanced behavior
+            */
+        let slope_scale_factor = 2.0; 
         // Optional: Get normal from height map for better placement
-        let normal = get_normal_from_height_data( chunk_height_data , height_scale , x, y ).unwrap_or(Vec3::Y);
+        let normal = get_normal_from_height_data( chunk_height_data , height_scale , x, y , slope_scale_factor ).unwrap_or(Vec3::Y);
         
         // Create rotation based on normal and add some randomness
         let normal_rotation = Quat::from_rotation_arc(Vec3::Y, normal);
@@ -362,6 +372,7 @@ fn get_normal_from_height_data(
     height_scale: f32, 
     x: usize,
     y: usize,
+    slope_scale_factor: f32, //different for each foliage type? 
 ) -> Option<Vec3> {
      let height_map = &height_data.0;
     let rows = height_map.len();
@@ -397,12 +408,14 @@ fn get_normal_from_height_data(
     
     // Scale factor to dampen the slope influence
     // Higher values = gentler slopes/rotations
-    let slope_scale_factor = 1.0 / height_scale; //  1000.0;    // inverse of height scale !! 
+    let   height_scale_factor = 1.0 / height_scale; //  1000.0;    // inverse of height scale !! 
     
+    let total_slope_factor = height_scale_factor * slope_scale_factor; 
+
     let normal = Vec3::new(
-        -dx / slope_scale_factor, 
+        -dx / total_slope_factor, 
         1.0, 
-        -dz / slope_scale_factor
+        -dz / total_slope_factor
     );
     
     // Normalize to unit length
